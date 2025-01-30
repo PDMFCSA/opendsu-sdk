@@ -79,7 +79,14 @@
     },
     {
       "name": "apihub",
-      "src": "https://github.com/opendsu/apihub.git"
+      "src": "https://github.com/opendsu/apihub.git",
+      "actions": [
+        {
+          "type": "smartClone",
+          "target": "modules",
+          "commit": "178805ba0396b7e4a6c7f982c1e67eed7f495414"
+        }
+      ]
     },
     {
       "name": "apihub/http-wrapper",
