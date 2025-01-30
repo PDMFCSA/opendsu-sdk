@@ -1,0 +1,330 @@
+{
+    "workDir": ".",
+    "dependencies": [
+        {
+            "name": "bar",
+            "src": "https://github.com/opendsu/bar.git",
+            "actions": [
+                {
+                    "type": "smartClone",
+                    "target": "modules",
+                    "commit": "7c7529d61fc1ec30a133a612fe66aa9841f3a754"
+                }
+            ]
+        },
+        {
+            "name": "bar-fs-adapter",
+            "src": "https://github.com/opendsu/bar-fs-adapter.git",
+            "actions": [
+                {
+                    "type": "smartClone",
+                    "target": "modules",
+                    "commit": "c800c9afd18d1a8f2045a7b02870431573dcff11"
+                }
+            ]
+        },
+        {
+            "name": "buffer-crc32",
+            "src": "https://github.com/opendsu/buffer-crc32.git",
+            "actions": [
+                {
+                    "type": "smartClone",
+                    "target": "modules",
+                    "commit": "2516b88d0a26ff05fd1ba1296c78089a6cfa70e0"
+                }
+            ]
+        },
+        {
+            "name": "double-check",
+            "src": "https://github.com/opendsu/double-check.git",
+            "actions": [
+                {
+                    "type": "smartClone",
+                    "target": "modules",
+                    "commit": "db62f0d99252fa7a3e526338b575c68302fa14e6"
+                }
+            ]
+        },
+        {
+            "name": "key-ssi-resolver",
+            "src": "https://github.com/opendsu/key-ssi-resolver.git",
+            "actions": [
+                {
+                    "type": "smartClone",
+                    "target": "modules",
+                    "commit": "9ca7eac5c5374db50670d55386b13a6e15ff9d9e"
+                }
+            ]
+        },
+        {
+            "name": "node-fd-slicer",
+            "src": "https://github.com/opendsu/node-fd-slicer.git",
+            "actions": [
+                {
+                    "type": "smartClone",
+                    "target": "modules",
+                    "commit": "109e0ee306209a48ddad962686d596bc5cb15633"
+                }
+            ]
+        },
+        {
+            "name": "opendsu",
+            "src": "https://github.com/opendsu/opendsu-core.git",
+            "actions": [
+                {
+                    "type": "smartClone",
+                    "target": "modules",
+                    "commit": "21f1dd4ac92b8aa9b3cb199e02908f01d73cf4e4"
+                }
+            ]
+        },
+        {
+            "name": "cloud-enclave",
+            "src": "https://github.com/opendsu/remoteEnclaveServer.git",
+            "actions": [
+                {
+                    "type": "smartClone",
+                    "target": "modules",
+                    "commit": "39e6ca9d0471faace308a8fb3ba11b64ea04e0cc"
+                }
+            ]
+        },
+        {
+            "name": "acl-magic",
+            "src": "https://github.com/opendsu/acl-magic.git",
+            "actions": [
+                {
+                    "type": "smartClone",
+                    "target": "modules",
+                    "commit": "ce53a95d618565bddb7e987524e6de12e317dc7d"
+                }
+            ]
+        },
+        {
+            "name": "fast-svd",
+            "src": "https://github.com/OpenDSU/FastSVD.git",
+            "actions": [
+                {
+                    "type": "smartClone",
+                    "target": "modules",
+                    "commit": "013f36f24c81ec267820145bdaed47730b239447"
+                }
+            ]
+        },
+        {
+            "name": "overwrite-require",
+            "src": "https://github.com/opendsu/overwrite-require.git",
+            "actions": [
+                {
+                    "type": "smartClone",
+                    "target": "modules",
+                    "commit": "52ed7188989d2963406871eeb36add233ea10536"
+                }
+            ]
+        },
+        {
+            "name": "psk-bindable-model",
+            "src": "https://github.com/opendsu/psk-bindable-model.git",
+            "actions": [
+                {
+                    "type": "smartClone",
+                    "target": "modules",
+                    "commit": "7bc0d15bc06f647c7af45829b8aea82f6019f15e"
+                }
+            ]
+        },
+        {
+            "name": "pskbuffer",
+            "src": "https://github.com/opendsu/pskbuffer.git",
+            "actions": [
+                {
+                    "type": "smartClone",
+                    "target": "modules",
+                    "commit": "ee9cbb17314aa739a107b53ef9f08877b82fe8ad"
+                }
+            ]
+        },
+        {
+            "name": "pskcrypto",
+            "src": "https://github.com/opendsu/pskcrypto.git",
+            "actions": [
+                {
+                    "type": "smartClone",
+                    "target": "modules",
+                    "commit": "b49bebfee01854eceb4f8e178b067914c667b8af"
+                }
+            ]
+        },
+        {
+            "name": "psklogger",
+            "src": "https://github.com/opendsu/psklogger.git",
+            "actions": [
+                {
+                    "type": "smartClone",
+                    "target": "modules",
+                    "commit": "7d5da12544dc714a89ccf656be57b8285c3275a5"
+                }
+            ]
+        },
+        {
+            "name": "psk-cache",
+            "src": "https://github.com/opendsu/psk-cache.git",
+            "actions": [
+                {
+                    "type": "smartClone",
+                    "target": "modules",
+                    "commit": "eff2c0c1eb2dc4d7102195b42d105deeeef596fc"
+                }
+            ]
+        },
+        {
+            "name": "soundpubsub",
+            "src": "https://github.com/opendsu/soundpubsub.git",
+            "actions": [
+                {
+                    "type": "smartClone",
+                    "target": "modules",
+                    "commit": "ea942daa19925145fd98bdbb6ee271bf6701c27a"
+                }
+            ]
+        },
+        {
+            "name": "swarmutils",
+            "src": "https://github.com/opendsu/swarmutils.git",
+            "actions": [
+                {
+                    "type": "smartClone",
+                    "target": "modules",
+                    "commit": "d254129947b0570dae65c2f88cfe2d68bbf6dc95"
+                }
+            ]
+        },
+        {
+            "name": "syndicate",
+            "src": "https://github.com/opendsu/syndicate.git",
+            "actions": [
+                {
+                    "type": "smartClone",
+                    "target": "modules",
+                    "commit": "008ffc0f06d36e5461ccee80d70d3cd7a9154dd4"
+                }
+            ]
+        },
+        {
+            "name": "apihub",
+            "src": "https://github.com/opendsu/apihub.git",
+            "actions": [
+                {
+                    "type": "smartClone",
+                    "target": "modules",
+                    "commit": "d0ebc43dd2cb2326f3bd04fb22fe02d9157d6ca6"
+                }
+            ]
+        },
+        {
+            "name": "apihub/http-wrapper",
+            "src": "https://github.com/opendsu/http-wrapper.git",
+            "actions": [
+                {
+                    "type": "smartClone",
+                    "target": "modules",
+                    "commit": "def8fd210bdcb607cd3f30211fca73db7e1be6d2"
+                }
+            ]
+        },
+        {
+            "name": "psk-dbf",
+            "src": "https://github.com/opendsu/psk-dbf.git",
+            "actions": [
+                {
+                    "type": "smartClone",
+                    "target": "modules",
+                    "commit": "84327dd111565e1878d7d52c7943e9c0fba23760"
+                }
+            ]
+        },
+        {
+            "name": "queue",
+            "src": "https://github.com/opendsu/queue.git",
+            "actions": [
+                {
+                    "type": "smartClone",
+                    "target": "modules",
+                    "commit": "5163e279d5b066a28a615997b2fd3372a894ceb3"
+                }
+            ]
+        },
+        {
+            "name": "loki-enclave-facade",
+            "src": "https://github.com/OpenDSU/LokiEnclaveFacade.git",
+            "actions": [
+                {
+                    "type": "smartClone",
+                    "target": "modules",
+                    "commit": "8f5c81f9f1c141c87e4ce2677ffc012f576f8e5f"
+                }
+            ]
+        },
+        {
+            "name": "lightDB-sql-adapter",
+            "src": "https://github.com/OpenDSU/lightDB-sql-adapter.git",
+            "actions": [
+                {
+                    "type": "smartClone",
+                    "target": "modules",
+                    "commit": "ae0cb84f1d83637ca93c59983cef65adcd1fa871"
+                }
+            ]
+        },
+        {
+            "name": "ssapp-middleware",
+            "src": "https://github.com/opendsu/ssapp-middleware.git",
+            "actions": [
+                {
+                    "type": "smartClone",
+                    "target": "modules",
+                    "commit": "2c9f771917a4b588948d1256719f196b7f17d941"
+                }
+            ]
+        },
+        {
+            "name": "../tests",
+            "src": "https://github.com/OpenDSU/opendsu-sdk-tests.git",
+            "actions": [
+                {
+                    "type": "smartClone",
+                    "target": "modules"
+                }
+            ]
+        },
+        {
+            "name": "cleanup any unnecessary files after dep installation",
+            "actions": [
+                {
+                    "type": "remove",
+                    "target": "latest-change-set.txt"
+                }
+            ]
+        },
+        {
+            "name": "build opendsu-sdk",
+            "actions": [
+                {
+                    "type": "execute",
+                    "cmd": "npm run build"
+                }
+            ]
+        }
+    ],
+    "postBuild": [
+        {
+            "name": "backwards compatibility for old bundles location",
+            "actions": [
+                {
+                    "type": "execute",
+                    "cmd": "node -e 'console.log(\"\\n\\n### Warning: the OpenDSU bundles from now on will be available at a new path <opendsu-sdk/builds/output> instead of <opendsu-sdk/psknode/bundles>!\\n\\n\")'"
+                }
+            ]
+        }
+    ]
+}
