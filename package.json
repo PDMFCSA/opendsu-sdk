@@ -3,11 +3,10 @@
     "version": "2.0.14",
     "description": "This repo is meant to be used for opendsu sdk development.",
     "scripts": {
-        "dev-install": "node ./bin/scripts/mkDevEnv.js && npm install",
+        "dev-install": "node ./bin/scripts/mkDevEnv.js && npm install && npm run pre-freeze-install",
         "pre-freeze-install": "npm install && node ./node_modules/octopus/scripts/setEnv --file=../../../../env.json \"npm run do-install\"",
         "ensure-freeze": "node ./node_modules/octopus/scripts/ensureFreezeState.js && npm run do-install",
         "no-freeze-install": "npm install && node ./node_modules/octopus/scripts/setEnv --file=../../../../env.json \"npm run ensure-freeze\"",
-        "postinstall": "node ./node_modules/octopus/scripts/setEnv --file=../../../../env.json \"npm run do-install\"",
         "do-install": "node ./node_modules/octopus/scripts/run",
         "update": "git pull && npm install",
         "build": "node ./bin/scripts/pskbuild.js --projectMap=./builds/build.json --output=./builds/output/ && node ./node_modules/octopus/scripts/run postBuild devmode",
