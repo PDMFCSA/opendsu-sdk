@@ -3,27 +3,27 @@
   "dependencies": [
     {
       "name": "bar",
-      "src": "https://github.com/opendsu/bar.git"
+      "src": "https://github.com/pharmaledgerassoc/bar.git"
     },
     {
       "name": "bar-fs-adapter",
-      "src": "https://github.com/opendsu/bar-fs-adapter.git"
+      "src": "https://github.com/pharmaledgerassoc/bar-fs-adapter.git"
     },
     {
       "name": "buffer-crc32",
-      "src": "https://github.com/opendsu/buffer-crc32.git"
+      "src": "https://github.com/pharmaledgerassoc/buffer-crc32.git"
     },
     {
       "name": "double-check",
-      "src": "https://github.com/opendsu/double-check.git"
+      "src": "https://github.com/pharmaledgerassoc/double-check.git"
     },
     {
       "name": "key-ssi-resolver",
-      "src": "https://github.com/opendsu/key-ssi-resolver.git"
+      "src": "https://github.com/pharmaledgerassoc/key-ssi-resolver.git"
     },
     {
       "name": "node-fd-slicer",
-      "src": "https://github.com/opendsu/node-fd-slicer.git"
+      "src": "https://github.com/pdmfcsa/node-fd-slicer.git"
     },
     {
       "name": "opendsu",
@@ -31,90 +31,83 @@
     },
     {
       "name": "cloud-enclave",
-      "src": "https://github.com/opendsu/remoteEnclaveServer.git"
+      "src": "https://github.com/pharmaledgerassoc/cloudEnclaveServer.git"
     },
     {
       "name": "acl-magic",
-      "src": "https://github.com/opendsu/acl-magic.git"
+      "src": "https://github.com/pharmaledgerassoc/acl-magic.git"
     },
     {
       "name": "fast-svd",
-      "src": "https://github.com/OpenDSU/FastSVD.git"
+      "src": "https://github.com/pharmaledgerassoc/FastSVD.git"
     },
     {
       "name": "overwrite-require",
-      "src": "https://github.com/opendsu/overwrite-require.git"
+      "src": "https://github.com/pharmaledgerassoc/overwrite-require.git"
     },
     {
       "name": "psk-bindable-model",
-      "src": "https://github.com/opendsu/psk-bindable-model.git"
+      "src": "https://github.com/pharmaledgerassoc/psk-bindable-model.git"
     },
     {
       "name": "pskbuffer",
-      "src": "https://github.com/opendsu/pskbuffer.git"
+      "src": "https://github.com/pharmaledgerassoc/pskbuffer.git"
     },
     {
       "name": "pskcrypto",
-      "src": "https://github.com/opendsu/pskcrypto.git"
+      "src": "https://github.com/pharmaledgerassoc/pskcrypto.git"
     },
     {
       "name": "psklogger",
-      "src": "https://github.com/opendsu/psklogger.git"
+      "src": "https://github.com/pharmaledgerassoc/psklogger.git"
     },
     {
       "name": "psk-cache",
-      "src": "https://github.com/opendsu/psk-cache.git"
+      "src": "https://github.com/pharmaledgerassoc/psk-cache.git"
     },
     {
       "name": "soundpubsub",
-      "src": "https://github.com/opendsu/soundpubsub.git"
+      "src": "https://github.com/pharmaledgerassoc/soundpubsub.git"
     },
     {
       "name": "swarmutils",
-      "src": "https://github.com/opendsu/swarmutils.git"
+      "src": "https://github.com/pharmaledgerassoc/swarmutils.git"
     },
     {
       "name": "syndicate",
-      "src": "https://github.com/opendsu/syndicate.git"
+      "src": "https://github.com/pharmaledgerassoc/syndicate.git"
     },
     {
       "name": "apihub",
-      "src": "https://github.com/opendsu/apihub.git",
-      "actions": [
-        {
-          "type": "smartClone",
-          "target": "modules",
-          "commit": "178805ba0396b7e4a6c7f982c1e67eed7f495414"
-        }
-      ]
+      "src": "https://github.com/pharmaledgerassoc/apihub.git"
     },
     {
       "name": "apihub/http-wrapper",
-      "src": "https://github.com/opendsu/http-wrapper.git"
+      "src": "https://github.com/pharmaledgerassoc/http-wrapper.git"
     },
     {
       "name": "psk-dbf",
-      "src": "https://github.com/opendsu/psk-dbf.git"
+      "src": "https://github.com/pharmaledgerassoc/dbf.git"
     },
     {
       "name": "queue",
-      "src": "https://github.com/opendsu/queue.git"
+      "src": "https://github.com/pharmaledgerassoc/queue.git"
     },
     {
       "name": "loki-enclave-facade",
-      "src": "https://github.com/OpenDSU/LokiEnclaveFacade.git"
+      "src": "https://github.com/pharmaledgerassoc/LokiEnclaveFacade.git"
     },
     {
       "name": "lightDB-sql-adapter",
-      "src": "https://github.com/OpenDSU/lightDB-sql-adapter.git"
+      "src": "https://github.com/pharmaledgerassoc/lightDB-sql-adapter.git"
     },
     {
       "name": "ssapp-middleware",
-      "src": "https://github.com/opendsu/ssapp-middleware.git"
+      "src": "https://github.com/pharmaledgerassoc/ssapp-middleware.git"
     },
     {
       "name": "../tests",
-      "src": "https://github.com/OpenDSU/opendsu-sdk-tests.git"
+      "src": "https://github.com/pharmaledgerassoc/opendsu-sdk-tests.git"
     },
     {
       "name": "cleanup any unnecessary files after dep installation",
@@ -126,7 +119,7 @@
       ]
     },
     {
-      "name": "build opendsu-sdk",
+      "name": "build pharmaledgerassoc-sdk",
       "actions": [
         {
           "type": "execute",
