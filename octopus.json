@@ -95,7 +95,21 @@
     },
     {
       "name": "loki-enclave-facade",
-      "src": "https://github.com/pharmaledgerassoc/LokiEnclaveFacade.git"
+      "src": "https://github.com/PDMFCSA/LokiEnclaveFacade.git",
+      "actions":[
+        {
+          "type": "smartClone",
+          "target": "modules",
+          "options": {
+            "branch": "TRUST-407_lokiDBMigration",
+            "depth": 1
+          }
+        },
+        {
+          "type": "execute",
+          "cmd": "cd modules/loki-enclave-facade && git fetch --unshallow"
+        }
+      ]
     },
     {
       "name": "lightDB-sql-adapter",
