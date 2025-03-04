@@ -1,5 +1,6 @@
 let path = require("path");
 const process = require("process");
+const nano = require("nano");
 let dirname = __dirname;
 process.env.PSK_ROOT_INSTALATION_FOLDER = path.resolve(path.join(__dirname, "../../../"));
 require(path.join(__dirname, '../../../builds/output/pskWebServer.js'));
