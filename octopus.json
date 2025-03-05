@@ -101,7 +101,7 @@
           "type": "smartClone",
           "target": "modules",
           "options": {
-            "branch": "TRUST-407_lokiDBMigration_v",
+            "branch": "TRUST-407_lokiDBMigration",
             "depth": 1
           }
         },
