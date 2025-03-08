@@ -3,7 +3,7 @@
     "version": "2.0.14",
     "description": "This repo is meant to be used for opendsu sdk development.",
     "scripts": {
-        "init": "git submodule update --init --recursive",
+        "init": "git submodule update --init --recursive && git submodule foreach \"git checkout master\"",
         "preinstall": "npm run init",
         "postinstall": "npm run build",
         "update": "git pull && npm install",
