@@ -7,7 +7,7 @@
         "preinstall": "npm run init",
         "postinstall": "npm run build",
         "update": "git pull && npm install",
-        "build": "node ./bin/scripts/pskbuild.js --projectMap=./builds/build.json --output=./builds/output/ && node ./node_modules/octopus/scripts/run postBuild devmode",
+        "build": "node ./bin/scripts/pskbuild.js --projectMap=./builds/build.json --output=./builds/output/",
         "start": "node ./psknode/bin/scripts/apiHubLauncher.js",
         "cloud-enclave": "node ./psknode/bin/scripts/enclaveLauncher.js",
         "remote-enclave": "npm run cloud-enclave",
