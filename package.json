@@ -3,19 +3,13 @@
     "version": "2.0.14",
     "description": "This repo is meant to be used for opendsu sdk development.",
     "scripts": {
-        "dev-install": "node ./bin/scripts/mkDevEnv.js && npm install && npm run pre-freeze-install",
-        "pre-freeze-install": "npm install && node ./node_modules/octopus/scripts/setEnv --file=../../../../env.json \"npm run do-install\"",
-        "ensure-freeze": "node ./node_modules/octopus/scripts/ensureFreezeState.js && npm run do-install",
-        "no-freeze-install": "npm install && node ./node_modules/octopus/scripts/setEnv --file=../../../../env.json \"npm run ensure-freeze\"",
-        "do-install": "node ./node_modules/octopus/scripts/run",
+        "postinstall": "npm run build",
         "update": "git pull && npm install",
         "build": "node ./bin/scripts/pskbuild.js --projectMap=./builds/build.json --output=./builds/output/ && node ./node_modules/octopus/scripts/run postBuild devmode",
         "start": "node ./psknode/bin/scripts/apiHubLauncher.js",
         "cloud-enclave": "node ./psknode/bin/scripts/enclaveLauncher.js",
         "remote-enclave": "npm run cloud-enclave",
         "tests": "npm run smoke-tests",
-        "freeze": "node ./node_modules/octopus/scripts/freeze",
-        "tag-freeze": "node ./node_modules/octopus/scripts/tagFreeze.js",
         "smoke-tests": "npm run build && node ./node_modules/octopus/scripts/setEnv --file=../../../env.json \"node ./psknode/bin/scripts/testrunner.js --config=./smoke-test-suites.json\""
     },
     "repository": {
