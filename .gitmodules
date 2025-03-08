@@ -1,0 +1,78 @@
+[submodule "modules/bar"]
+	path = modules/bar
+	url = https://github.com/pharmaledgerassoc/bar.git
+[submodule "modules/bar-fs-adapter"]
+	path = modules/bar-fs-adapter
+	url = https://github.com/pharmaledgerassoc/bar-fs-adapter.git
+[submodule "modules/buffer-crc32"]
+	path = modules/buffer-crc32
+	url = https://github.com/pharmaledgerassoc/buffer-crc32.git
+[submodule "modules/double-check"]
+	path = modules/double-check
+	url = https://github.com/pharmaledgerassoc/double-check.git
+[submodule "modules/key-ssi-resolver"]
+	path = modules/key-ssi-resolver
+	url = https://github.com/pharmaledgerassoc/key-ssi-resolver.git
+[submodule "modules/node-fd-slicer"]
+	path = modules/node-fd-slicer
+	url = https://github.com/pdmfcsa/node-fd-slicer.git
+[submodule "modules/opendsu"]
+	path = modules/opendsu
+	url = https://github.com/opendsu/opendsu-core.git
+[submodule "modules/cloud-enclave"]
+	path = modules/cloud-enclave
+	url = https://github.com/pharmaledgerassoc/cloudEnclaveServer.git
+[submodule "modules/acl-magic"]
+	path = modules/acl-magic
+	url = https://github.com/pharmaledgerassoc/acl-magic.git
+[submodule "modules/fast-svd"]
+	path = modules/fast-svd
+	url = https://github.com/pharmaledgerassoc/FastSVD.git
+[submodule "modules/overwrite-require"]
+	path = modules/overwrite-require
+	url = https://github.com/pharmaledgerassoc/overwrite-require.git
+[submodule "modules/psk-bindable-model"]
+	path = modules/psk-bindable-model
+	url = https://github.com/pharmaledgerassoc/psk-bindable-model.git
+[submodule "modules/pskbuffer"]
+	path = modules/pskbuffer
+	url = https://github.com/pharmaledgerassoc/pskbuffer.git
+[submodule "modules/pskcrypto"]
+	path = modules/pskcrypto
+	url = https://github.com/pharmaledgerassoc/pskcrypto.git
+[submodule "modules/psklogger"]
+	path = modules/psklogger
+	url = https://github.com/pharmaledgerassoc/psklogger.git
+[submodule "modules/psk-cache"]
+	path = modules/psk-cache
+	url = https://github.com/pharmaledgerassoc/psk-cache.git
+[submodule "modules/soundpubsub"]
+	path = modules/soundpubsub
+	url = https://github.com/pharmaledgerassoc/soundpubsub.git
+[submodule "modules/swarmutils"]
+	path = modules/swarmutils
+	url = https://github.com/pharmaledgerassoc/swarmutils.git
+[submodule "modules/syndicate"]
+	path = modules/syndicate
+	url = https://github.com/pharmaledgerassoc/syndicate.git
+[submodule "modules/apihub"]
+	path = modules/apihub
+	url = https://github.com/pharmaledgerassoc/apihub.git
+[submodule "modules/psk-dbf"]
+	path = modules/psk-dbf
+	url = https://github.com/pharmaledgerassoc/dbf.git
+[submodule "modules/queue"]
+	path = modules/queue
+	url = https://github.com/pharmaledgerassoc/queue.git
+[submodule "modules/loki-enclave-facade"]
+	path = modules/loki-enclave-facade
+	url = https://github.com/pharmaledgerassoc/LokiEnclaveFacade.git
+[submodule "modules/lightDB-sql-adapter"]
+	path = modules/lightDB-sql-adapter
+	url = https://github.com/pharmaledgerassoc/lightDB-sql-adapter.git
+[submodule "modules/ssapp-middleware"]
+	path = modules/ssapp-middleware
+	url = https://github.com/pharmaledgerassoc/ssapp-middleware.git
+[submodule "tests/sdk"]
+	path = tests/sdk
+	url = https://github.com/pharmaledgerassoc/opendsu-sdk-tests.git
