@@ -66,7 +66,7 @@
 	url = https://github.com/pharmaledgerassoc/queue.git
 [submodule "modules/loki-enclave-facade"]
 	path = modules/loki-enclave-facade
-	url = https://github.com/pharmaledgerassoc/LokiEnclaveFacade.git
+	url = https://github.com/pdmfcsa/LokiEnclaveFacade.git
 [submodule "modules/lightDB-sql-adapter"]
 	path = modules/lightDB-sql-adapter
 	url = https://github.com/pharmaledgerassoc/lightDB-sql-adapter.git
