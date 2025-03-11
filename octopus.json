@@ -96,12 +96,12 @@
     {
       "name": "loki-enclave-facade",
       "src": "https://github.com/PDMFCSA/LokiEnclaveFacade.git",
-      "actions":[
+      "actions": [
         {
           "type": "smartClone",
           "target": "modules",
           "options": {
-            "branch": "TRUST-407_lokiDBMigration",
+            "branch": "TRUST-407_lokiDBMigration_v",
             "depth": 1
           }
         },
