@@ -54,7 +54,6 @@ class DatabaseClient {
      */
     async insertDocument(_id, document) {
         // TODO - Empty objects {} are not being validated.
-        _id = _id.toString();
         try {
             const record = await this.readDocument( _id);
         } catch  (e) {
@@ -87,7 +86,6 @@ class DatabaseClient {
      */
     async readDocument(_id) {
         try {
-            _id = _id.toString();
             const document = await this.connection.get(_id);
             return remapObject(document);
         } catch (error) {
@@ -108,7 +106,6 @@ class DatabaseClient {
      */
     async updateDocument(_id, document) {
         try {
-            _id = _id.toString();
             const dbRecord = await this.connection.get(_id);
             const _rev = dbRecord[DBKeys.REV];
             for (let prop in document) {
@@ -144,7 +141,6 @@ class DatabaseClient {
      */
     async deleteDocument(_id) {
         try {
-            _id = _id.toString();
             const document = await this.connection.get(_id);
             await this.connection.destroy(_id, document[DBKeys.REV]);
             return {[OpenDSUKeys.PK]: _id};

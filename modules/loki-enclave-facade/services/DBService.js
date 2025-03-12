@@ -242,45 +242,21 @@ class DBService {
             throw new Error(`Table "${database}" does not exist.`);
 
         properties = Array.isArray(properties) ? properties : [properties];
-        for (let indexedProp of properties){
-            let index = `${indexedProp}_index`;
-            try {
-                await this.client.use(database).createIndex({
-                    name: index,
-                    index: {
-                        fields: [indexedProp]
-                    },
-                    type: "json" // default
-                });
+        const index = `${properties.join("_")}_index`;
+        try {
+            await this.client.use(database).createIndex({
+                name: index,
+                index: {
+                    fields: properties
+                },
+                type: "json" // default
+            });
 
-                logger.info(`Added index ${index} for table "${database}".`);
-
-                const asc_index = `${index}_ascending`;
-                await this.client.use(database).createIndex({
-                    name: asc_index,
-                    index: {
-                        fields: [{[indexedProp]: "asc"}]
-                    },
-                    type: "json" // default
-                });
-
-                logger.info(`Added index ${asc_index} for table "${database}" with ${indexedProp} asc.`);
-
-                const desc_index = `${index}_descending`;
-                await this.client.use(database).createIndex({
-                    name: desc_index,
-                    index: {
-                        fields: [{[indexedProp]: "desc"}]
-                    },
-                    type: "json" // default
-                });
-
-                logger.info(`Added index ${desc_index} for table "${database}" with ${indexedProp} desc.`);
-            } catch (err) {
-                throw new Error(`Could not add index ${index} on ${database}: ${err.message}`);
-            }
+            logger.info(`Added index ${index} for table "${database}".`);
+            return true;
+        } catch (err) {
+            throw new Error(`Could not add index ${index} on ${database}: ${err.message}`);
         }
-        return true;
     }
 
     /**

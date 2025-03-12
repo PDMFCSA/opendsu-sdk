@@ -21,13 +21,9 @@ function normalizeNumber(value, min, defaultValue) {
     if (value === null || value === undefined)
         return (defaultValue < min) ? min : defaultValue;
 
-    let num = Number(value);
-    if (!Number.isInteger(num)){
-        if (num === Infinity)
-            num = 250;
-        else
-            throw new Error(`The value must be an integer or null.`);
-    }
+    const num = Number(value);
+    if (!Number.isInteger(num))
+        throw new Error(`The value must be an integer or null.`);
 
     return num < min ? min : num;
 }
@@ -36,29 +32,28 @@ function normalizeNumber(value, min, defaultValue) {
 /**
  * Validates and normalizes a sorting object or array.
  *
- * @param {[string, string]} sort - Sorting criteria.
+ * @param {Object|Array|undefined|null} sort - Sorting criteria.
  * @returns {Array<Object>} - Normalized sorting array.
  * @throws {Error} - If the sort object contains invalid values.
  */
 function validateSort(sort) {
-    return [{[sort[0]]: sort[1]}];
-    // // if null, undefined or {}
-    // if (!sort || (typeof sort === "object" && Object.keys(sort).length === 0))
-    //     return [{[DBKeys.TIMESTAMP]: SortOrder.ASC}];
-    //
-    // if (typeof sort !== "object")
-    //     throw new Error("Invalid sort format. Must be an object of key-value.");
-    //
-    // return Object.entries(sort).map(([key, value]) => {
-    //     if (typeof value !== "string")
-    //         throw new Error(`Invalid sort value "${value}" for key "${key}".`);
-    //
-    //     const normalizedValue = value.toLowerCase();
-    //     if (!Object.values(SortOrder).includes(normalizedValue))
-    //         throw new Error(`Invalid sort order for key "${key}". Use one of ${Object.values(SortOrder)}.`);
-    //
-    //     return {[key]: normalizedValue === SortOrder.DESC ? SortOrder.DSC : normalizedValue};
-    // })
+    // if null, undefined or {}
+    if (!sort || (typeof sort === "object" && Object.keys(sort).length === 0))
+        return [{[DBKeys.TIMESTAMP]: SortOrder.ASC}];
+
+    if (typeof sort !== "object")
+        throw new Error("Invalid sort format. Must be an object of key-value.");
+
+    return Object.entries(sort).map(([key, value]) => {
+        if (typeof value !== "string")
+            throw new Error(`Invalid sort value "${value}" for key "${key}".`);
+
+        const normalizedValue = value.toLowerCase();
+        if (!Object.values(SortOrder).includes(normalizedValue))
+            throw new Error(`Invalid sort order for key "${key}". Use one of ${Object.values(SortOrder)}.`);
+
+        return {[key]: normalizedValue === SortOrder.DESC ? SortOrder.DSC : normalizedValue};
+    })
 }
 
 /**
@@ -158,17 +153,23 @@ function parseQueryPart(queryPart) {
  * @throws {Error} - Throws an error if the input is not a valid array.
  */
 function buildSelector(query) {
-    if (typeof query === "object" && query !== null && Object.keys(query).length === 0)
-        return {timestamp: {$gt: null}}; // TODO
+    // if (typeof query === "object" && query !== null && Object.keys(query).length === 0)
+    //     return {timestamp: {$gt: null}}; // TODO
 
-    if (!Array.isArray(query) || !query.every(item => typeof item === "string" && validateQueryOperators(item)))
-        throw new Error("Query must be an array of valid condition strings");
+    // if (!Array.isArray(query) || !query.every(item => typeof item === "string" && validateQueryOperators(item)))
+    //     throw new Error("Query must be an array of valid condition strings");
 
-    if (query.length === 0)
-        return {};
+    // if (query.length === 0)
+    //     return {};
 
-    const conditions = query.map(parseQueryPart);
-    return {$and: conditions};
+    // const conditions = query.map(parseQueryPart);
+    // return {$and: conditions};
+
+    return {
+        timestamp: {
+            $gt: 0
+        }
+    }
 }
 
 
