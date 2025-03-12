@@ -6,6 +6,8 @@ const DBKeys = {
     META: "meta" // LokiDB property
 };
 
+const ReadUser = "reader"
+
 const SortOrder = {
     ASC: "asc",
     DSC: "dsc",
@@ -59,5 +61,6 @@ module.exports = {
     Tables,
     SortOrder,
     DSUKeysToDBMapping,
-    DBKeysToDSUMapping
+    DBKeysToDSUMapping,
+    ReadUser
 };

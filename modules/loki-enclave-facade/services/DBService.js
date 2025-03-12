@@ -3,6 +3,7 @@ const logger = $$.getLogger("DBService");
 const nano = require("nano");
 const {ensureAuth} = require("./utils");
 const {DatabaseClient} = require("./DBClient");
+const {ReadUser} = require("../utils/constants");
 
 let dbService;
 
@@ -101,6 +102,86 @@ class DBService {
         }
     }
 
+    async createReadUser(){
+        const users = await this.client.use("_users");
+        let user = {_id: "org.couchdb.user:" + ReadUser, name: ReadUser, password: "readpw", roles: ["user"], type: "user"}
+        let created;
+
+        try {
+            logger.debug(`Checking user existence ${ReadUser}`)
+            created = await users.insert(user);
+            logger.info(`User created ${ReadUser}`)
+        } catch (e) {
+            if (e instanceof Error)
+                if(!e.message.includes("Document update conflict"))
+                    throw e;
+            else
+                throw e;
+        }
+
+        if (!created.ok)
+            throw new Error(`"Failed to create user ${ReadUser}: ${created.reason}`);
+
+    }
+
+    /**
+     *
+     * @param {string} dbName
+     * @returns {Promise<void>}
+     */
+    async assignReadUser(dbName) {
+        await this.client.request({
+            db: dbName,
+            method: "put",
+            path: "_security",
+            // headers: {
+            //
+            // },
+            body: {
+                admins: {
+                    names: [],
+                    roles: []
+                },
+                members: {
+                    names: [ReadUser],
+                    roles: []
+                }
+            }
+        })
+        logger.info(`Read User added in db "${dbName}"`);
+    }
+    /**
+     * @description Creates a read only policy on the specified database.
+     * @summary
+     *
+     * @param {DocumentScope} db
+     * @returns {Promise<void>}
+     */
+    async createReadOnlyPolicy(db){
+        await db.insert({
+            _id: "_design/read_only_policy",
+            validate_doc_update: `function(newDoc, oldDoc, userCtx, secObj) {
+  let ddoc = this;
+
+  secObj.admins = secObj.admins || {};
+  secObj.admins.names = secObj.admins.names || [];
+  secObj.admins.roles = secObj.admins.roles || [];
+
+  let IS_DB_ADMIN = false;
+  if(~ userCtx.roles.indexOf('_admin'))
+    IS_DB_ADMIN = true;
+  if(~ secObj.admins.names.indexOf(userCtx.name))
+    IS_DB_ADMIN = true;
+  for(let i = 0; i < userCtx.roles; i++)
+    if(~ secObj.admins.roles.indexOf(userCtx.roles[i]))
+      IS_DB_ADMIN = true;
+
+    if(!IS_DB_ADMIN)
+      throw {'forbidden':'This database is read-only'};
+}`
+        })
+    }
+
     /**
      * Creates a new database with the specified name and indexes if it doesn't already exist.
      *
@@ -119,6 +200,12 @@ class DBService {
 
             await this.client.db.create(dbName);
             logger.info(`Database "${dbName}" created successfully.`);
+            const db = this.client.use(dbName)
+            await this.createReadOnlyPolicy(db);
+            logger.info(`Created Read-only policy in db "${dbName}"`);
+            // await this.createReadUser();
+            await this.assignReadUser(dbName);
+
 
             const indexSet = new Set(Array.isArray(indexes) && indexes.length ? indexes : []);
             indexSet.add(DBKeys.TIMESTAMP)

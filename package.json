@@ -10,6 +10,9 @@
         "cloud-enclave": "node ./psknode/bin/scripts/enclaveLauncher.js",
         "remote-enclave": "npm run cloud-enclave",
         "tests": "npm run smoke-tests",
+        "start-db": "cd docker && docker compose up -d",
+        "shutdown-db": "cd docker && docker compose down -v --remove-orphans",
+        "create-users-db": "curl -X PUT admin:adminpw@localhost:5984/_users",
         "freeze": "node ./node_modules/octopus/scripts/freeze",
         "tag-freeze": "node ./node_modules/octopus/scripts/tagFreeze.js",
         "smoke-tests": "npm run build && node ./node_modules/octopus/scripts/setEnv --file=../../../env.json \"node ./psknode/bin/scripts/testrunner.js --config=./smoke-test-suites.json\""
