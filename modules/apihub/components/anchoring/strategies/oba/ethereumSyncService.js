@@ -30,7 +30,7 @@ function EthereumSyncService(server, config) {
             this.finishInitialisation();
         })
 
-        lokiEnclaveFacade.storageDB.createCollection(undefined, ANCHORS_TABLE_NAME, ["scheduled"], (err) => {
+        lokiEnclaveFacade.createCollection(undefined, ANCHORS_TABLE_NAME, ["scheduled"], (err) => {
             if (err){
                 logger.error(`Failed to boot ${ANCHORS_TABLE_NAME} database: ${err}`);
                 this.finishInitialisation();
