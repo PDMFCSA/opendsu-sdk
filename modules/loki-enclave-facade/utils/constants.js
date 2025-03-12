@@ -42,11 +42,22 @@ const DBOperatorsMap = {
     "||": "$or"
 };
 
+const DSUKeysToDBMapping = {
+    [OpenDSUKeys.PK]: DBKeys.PK,
+    [OpenDSUKeys.TIMESTAMP]: DBKeys.TIMESTAMP
+};
+
+const DBKeysToDSUMapping = Object.fromEntries(
+    Object.entries(DSUKeysToDBMapping).map(([key, value]) => [value, key])
+);
+
 module.exports = {
     DBOperatorsMap,
     DBKeys,
     OpenDSUKeys,
     Permissions,
     Tables,
-    SortOrder
+    SortOrder,
+    DSUKeysToDBMapping,
+    DBKeysToDSUMapping
 };

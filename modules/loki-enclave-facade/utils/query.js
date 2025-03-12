@@ -1,4 +1,4 @@
-const {DBKeys, SortOrder, DBOperatorsMap} = require("./constants");
+const {DBKeys, SortOrder, DBOperatorsMap, DSUKeysToDBMapping} = require("./constants");
 
 /**
  * Normalizes a numeric value, ensuring it is an integer greater than or equal to the specified minimum.
@@ -41,7 +41,8 @@ function normalizeNumber(value, min, defaultValue) {
  * @throws {Error} - If the sort object contains invalid values.
  */
 function validateSort(sort) {
-    return [{[sort[0]]: sort[1]}];
+    const field = DSUKeysToDBMapping[sort[0]] || sort[0];
+    return [{[field]: sort[1]}];
     // // if null, undefined or {}
     // if (!sort || (typeof sort === "object" && Object.keys(sort).length === 0))
     //     return [{[DBKeys.TIMESTAMP]: SortOrder.ASC}];
@@ -115,8 +116,9 @@ function buildCondition(field, operator, value) {
         }
     }
 
+    const fieldName = DSUKeysToDBMapping[field] || field;
     return {
-        [field]: {
+        [fieldName]: {
             [mangoOperator]: parseValue(value)
         }
     };
@@ -130,6 +132,7 @@ function buildCondition(field, operator, value) {
  */
 function parseQueryPart(queryPart) {
     if (queryPart.includes("||")) {
+        console.warn(`Parsing OR query (${queryPart}).`);
         // If it contains "||", treat it as an OR condition
         const orConditions = queryPart
             .split("||")
@@ -144,9 +147,8 @@ function parseQueryPart(queryPart) {
     } else {
         // Otherwise, treat it as a simple AND condition
         const [field, operator, value] = queryPart.split(/\s+/);
-        if (!field || !operator || !value) {
+        if (!field || !operator || !value)
             throw new Error(`Malformed query part: ${queryPart}`);
-        }
         return buildCondition(field, operator, value);
     }
 }
@@ -158,6 +160,9 @@ function parseQueryPart(queryPart) {
  * @throws {Error} - Throws an error if the input is not a valid array.
  */
 function buildSelector(query) {
+    if (typeof query === "undefined")
+        return {timestamp: {$gt: null}};
+
     if (typeof query === "object" && query !== null && Object.keys(query).length === 0)
         return {timestamp: {$gt: null}}; // TODO
 
