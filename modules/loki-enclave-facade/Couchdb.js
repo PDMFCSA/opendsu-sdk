@@ -41,15 +41,6 @@ function CouchDB(rootFolder, config) {
     //USE BASE NAME TO CONCAT WITH TABLE NAME
     const db = new DBService(config);
 
-    //TODO: Base imp need real logic
-    function parseConditionsToDBQuery(conditions) {
-        if (!conditions || conditions.length === 0 || conditions === "") {
-            return {};
-        }
-
-        return {};
-    }
-
     /**
      * Removes a collection.
      *
@@ -315,6 +306,8 @@ function CouchDB(rootFolder, config) {
         }
 
         const sortingField = getSortingKeyFromCondition(filterConditions);
+
+        logger.info(`$$$$: Sorting FIELD ${sortingField}.`);
 
         db.openDatabase(tableName).then((dbc) => {
             if (!dbc)
