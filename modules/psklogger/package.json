@@ -1,0 +1,21 @@
+{
+  "name": "psk-logger",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PrivateSky/psklogger.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "git+https://github.com/PrivateSky/psklogger/issues"
+  },
+  "homepage": "git+https://github.com/PrivateSky/psklogger#readme",
+  "dependencies": {
+  }
+}

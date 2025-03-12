@@ -1,0 +1,18 @@
+{
+  "name": "psk-bindable-model",
+  "version": "0.0.1",
+  "description": "A library for implementing two way data-binding.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node tests/test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PrivateSky/psk-bindable-model"
+  },
+  "keywords": [
+    "data-binding",
+    "two-way-data-binding"
+  ],
+  "license": "MIT"
+}

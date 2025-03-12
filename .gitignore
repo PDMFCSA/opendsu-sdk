@@ -1,7 +1,5 @@
 env.json.devel
 *_intermediar.js
-modules
-node_modules
 .idea
 builds/tmp/*_intermediar.js
 builds/output/

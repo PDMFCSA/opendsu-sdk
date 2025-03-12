@@ -1,0 +1,23 @@
+{
+  "name": "key-ssi-resolver",
+  "version": "v1.0.4",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/privatesky/key-ssi-resolver.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/privatesky/key-ssi-resolver/issues"
+  },
+  "homepage": "https://github.com/privatesky/key-ssi-resolver#readme"
+}

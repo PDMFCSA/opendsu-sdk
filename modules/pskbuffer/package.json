@@ -1,0 +1,23 @@
+{
+  "name": "pskbuffer",
+  "version": "1.0.0",
+  "description": "Replace all use of node.j.s $$.Buffer with PSKBuffer to allow portability in browser and isolates",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PrivateSky/pskbuffer.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PrivateSky/pskbuffer/issues"
+  },
+  "homepage": "https://github.com/PrivateSky/pskbuffer#readme"
+}

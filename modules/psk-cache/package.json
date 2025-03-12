@@ -1,0 +1,20 @@
+{
+  "name": "psk-cache",
+  "version": "1.0.0",
+  "description": "General purpose in-memory caching library",
+  "main": "index.js",
+  "scripts": {
+    "test": "cd tests && node test.js",
+    "tests": "cd tests && node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PrivateSky/psk-cache.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/PrivateSky/psk-cache/issues"
+  },
+  "homepage": "https://github.com/PrivateSky/psk-cache#readme"
+}
