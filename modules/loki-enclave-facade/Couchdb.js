@@ -315,10 +315,9 @@ function CouchDB(rootFolder, config) {
         }
 
         const sortingField = getSortingKeyFromCondition(filterConditions);
-        filterConditions = parseConditionsToDBQuery(filterConditions);
 
-        db.openDatabase(tableName).then((db) => {
-            if (!db)
+        db.openDatabase(tableName).then((dbc) => {
+            if (!dbc)
                 return callback(undefined, []);
 
             let direction = false;
@@ -326,15 +325,8 @@ function CouchDB(rootFolder, config) {
                 direction = true;
             }
 
-            // let result;
-            // try {
-            //     result = db.find(filterConditions).simplesort(sortingField, direction).limit(max).data();
-            // } catch (err) {
-            //     return callback(createOpenDSUErrorWrapper(`Filter operation failed on ${tableName}`, err));
-            // }
-
             // TODO: Add filter
-            db.filter({}, {})
+            db.filter(tableName, filterConditions, [sortingField, sort], max)
                 .then((response) => callback(undefined, response))
                 .catch((e) => callback(createOpenDSUErrorWrapper(`Filter operation failed on ${tableName}`, e)));
         }).catch((e) => callback(createOpenDSUErrorWrapper(`open operation failed on ${tableName}`, e)))
