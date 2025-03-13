@@ -60,7 +60,7 @@ function validateSort(sort) {
     if (!Object.values(SortOrder).includes(normalizedValue))
         throw new Error(`Invalid sort order "${value}" for key "${sort[0]}". Use one of ${Object.values(SortOrder)}.`);
 
-    return [key, normalizedValue === SortOrder.DESC ? SortOrder.DSC : normalizedValue]
+    return [ {[key]: normalizedValue === SortOrder.DSC ? SortOrder.DESC : normalizedValue} ];
 }
 
 /**
