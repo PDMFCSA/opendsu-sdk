@@ -48,17 +48,17 @@ function validateSort(sort) {
         return [DBKeys.TIMESTAMP, SortOrder.DSC];
 
     if (!Array.isArray(sort))
-        throw new Error(`Invalid sort format. Must be an array instead of ${JSON.stringify(sort)}.`);
+        throw new TypeError(`Invalid sort format. Must be an array instead of ${JSON.stringify(sort)}.`);
 
     const key = DSUKeysToDBMapping[sort[0]] || sort[0];
     const value = sort[1] || SortOrder.DSC;
 
     if (typeof value !== "string")
-        throw new Error(`Invalid sort value "${value}" for key "${sort[0]}".`);
+        throw new TypeError(`Invalid sort value "${value}" for key "${sort[0]}".`);
 
     const normalizedValue = value.toLowerCase();
     if (!Object.values(SortOrder).includes(normalizedValue))
-        throw new Error(`Invalid sort order "${value}" for key "${sort[0]}". Use one of ${Object.values(SortOrder)}.`);
+        throw new Error(`Invalid sort order "${value}" for key "${sort[0]}". Use one of ${Object.values(SortOrder).join(", ")}.`);
 
     return [key, normalizedValue === SortOrder.DESC ? SortOrder.DSC : normalizedValue]
 }
