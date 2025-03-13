@@ -188,9 +188,15 @@ function CouchDB(rootFolder, config) {
             if (!exists)
                 return callback(createOpenDSUErrorWrapper(`Could not update record collection ${tableName} does not exist!`));
 
-            db.updateDocument(tableName, pk, record)(tableName, pk, record)
-                .then((response) => callback(undefined, response))
-                .catch((e) => callback(createOpenDSUErrorWrapper(e), undefined));
+            db.openDatabase(tableName).then((dbc) => {
+                if(!dbc)
+                    return callback(createOpenDSUErrorWrapper(`Could not update record collection ${tableName} does not exist!`));
+                
+                dbc.updateDocument(tableName, pk, record)(tableName, pk, record)
+                    .then((response) => callback(undefined, response))
+                    .catch((e) => callback(createOpenDSUErrorWrapper(e), undefined))
+
+            }).catch((e) => callback(createOpenDSUErrorWrapper(e), undefined));
         }).catch((e) => callback(createOpenDSUErrorWrapper(e), undefined));
     }
 
