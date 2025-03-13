@@ -179,13 +179,13 @@ class DatabaseClient {
             const response = await this.connection.insert(update);
             return await this.readDocument(response.id);
         } catch (error) {
-            // if (error.statusCode === 404) {
-            //     if (document[OpenDSUKeys.FALLBACK_INSERT]) {
-            //         delete document[OpenDSUKeys.FALLBACK_INSERT];
-            //         return this.insertDocument(database, _id, document);
-            //     }
-            //     throw new Error(`Failed to update document "${_id}" from "${database}": Not found.`);
-            // }
+            if (error.statusCode === 404) {
+                if (document[OpenDSUKeys.FALLBACK_INSERT]) { // used by fixedURL
+                    delete document[OpenDSUKeys.FALLBACK_INSERT];
+                    return this.insertDocument(_id, document);
+                }
+                throw new Error(`Failed to update document "${_id}" from "${this.dbName}": Not found.`);
+            }
             throw new Error(`Failed to update document "${_id}" from "${this.dbName}": ${error}`);
         }
     }
