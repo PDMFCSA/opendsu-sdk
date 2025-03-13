@@ -73,6 +73,7 @@ class DBService {
     /**
      * Converts to lower case and checks if DB Name is valid for couch db.
      * @param {string} dbName
+     * @param {string} [forDid]
      * @returns {string} - dbName if the database name is valid, `false` otherwise.
      */
     changeDBNameToLowerCaseAndValidate(dbName){

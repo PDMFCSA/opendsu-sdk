@@ -248,10 +248,10 @@ class DatabaseClient {
      * @returns {Promise<Array<Object>>}g.
      * @throws {Error} If there is an issue querying the database.
      */
-    async filter(query, sort = [], limit = undefined, skip = 0) {
+    async filter(query, origSort = [], limit = undefined, skip = 0) {
         limit = normalizeNumber(limit, 1, undefined);
         skip = normalizeNumber(skip, 0, 0);
-        sort = validateSort(sort);
+        let sort = validateSort(origSort);
 
         const selector = buildSelector(query);
         const mangoQuery = {
@@ -269,11 +269,11 @@ class DatabaseClient {
             // TODO - Needs improvement. temporary quick fix:
             if (error.error === "no_usable_index") {
                 try {
-                    await addIndex.call(this, this.client, this.dbName, sort[0]);
+                    await addIndex.call(this, this.client, this.dbName, origSort[0]);
                 } catch (e) {
                     throw new Error(`Failed to add index to table ${this.dbName}: ${error}`);
                 }
-                return this.filter(query, sort, limit, skip);
+                return this.filter(query, origSort, limit, skip);
             }
             throw new Error(`Error filtering documents from table ${this.dbName}: ${error}`);
         }

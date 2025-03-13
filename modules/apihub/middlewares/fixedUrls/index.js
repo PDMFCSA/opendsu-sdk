@@ -455,12 +455,12 @@ module.exports = function (server) {
                             logger.error("Failed to grant write access to the enclave", err.message, err.code, err.rootCause);
                         }
 
-                        lightDBEnclaveClient.createCollection($$.SYSTEM_IDENTIFIER, TASKS_TABLE, ["pk", "__timestamp"], (err) => {
+                        lightDBEnclaveClient.createCollection($$.SYSTEM_IDENTIFIER, TASKS_TABLE, ["pk", "__timestamp", "url"], (err) => {
                             if (err) {
                                 logger.error("Failed to create collection", err.message, err.code, err.rootCause);
                             }
 
-                            lightDBEnclaveClient.createCollection($$.SYSTEM_IDENTIFIER, HISTORY_TABLE, ["pk", "__timestamp"], (err) => {
+                            lightDBEnclaveClient.createCollection($$.SYSTEM_IDENTIFIER, HISTORY_TABLE, ["pk", "__timestamp", "url"], (err) => {
                                 if (err) {
                                     logger.error("Failed to create collection", err.message, err.code, err.rootCause);
                                 }

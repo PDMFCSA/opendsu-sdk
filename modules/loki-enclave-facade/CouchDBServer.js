@@ -29,12 +29,12 @@ function CouchDBServer(config, callback) {
     if (!config.storage) {
         config.storage = lightDBStorage;
     }
-
-    const dbAdapter = new LightDBAdapter({
-        uri: config.db.uri,
-        username: config.db.user,
-        secret: config.db.secret
-    });
+    //
+    // const dbAdapter = new LightDBAdapter({
+    //     uri: config.db.uri,
+    //     username: config.db.user,
+    //     secret: config.db.secret
+    // });
 
 
     const enclaves = {};
@@ -216,7 +216,9 @@ function CouchDBServer(config, callback) {
                         }
 
                         if (server.readOnlyModeActive) {
-                            if (dbAdapter.allowedInReadOnlyMode && dbAdapter.allowedInReadOnlyMode(command.commandName)) {
+                            if (enclaves[req.params.dbName].allowedInReadOnlyMode &&
+                                !enclaves[req.params.dbName].allowedInReadOnlyMode(command.commandName)) {
+
                                 res.statusCode = 403;
                                 res.end();
                                 return;
@@ -257,12 +259,7 @@ function CouchDBServer(config, callback) {
 
                         // trying to capture any sync error that might occur during the execution of the command
                         try {
-                            dbAdapter[command.commandName](...args);
-                            // if (enclaves[req.params.dbName].refreshInProgress()) {
-                            //     clonedEnclaves[req.params.dbName][command.commandName](...args);
-                            // } else {
-                            //     enclaves[req.params.dbName][command.commandName](...args);
-                            // }
+                            enclaves[req.params.dbName][command.commandName](...args);
                         } catch (e) {
                             cb(e);
                         }
@@ -295,19 +292,41 @@ function CouchDBServer(config, callback) {
                     return;
                 }
 
-                const enclaveKey = getEnclaveKey(dbName);
-                dbAdapter.createCollection(enclaveKey, [], (err, result) => {
+                const storage = path.join(lightDBStorage, dbName);
+                logger.info(`Creating new Database at ${storage}`);
+                let fsModule = "fs";
+                fsModule = require(fsModule);
+                fsModule.mkdir(storage, {recursive: true}, (err) => {
                     if (err) {
                         logger.error("Failed to create database", err);
                         res.statusCode = 500;
                         res.end();
                         return;
                     }
-
-                    enclaves[dbName] = enclaveKey;
+                    if (enclaves[dbName]) {
+                        logger.error("Race condition detected and resolved during lightDB database creation");
+                        res.statusCode = 409;
+                        res.write("Already exists");
+                        return res.end();
+                    }
+                    enclaves[dbName] = LokiEnclaveFacade.createLokiEnclaveFacadeInstance(path.join(storage, DATABASE));
                     res.statusCode = 201;
                     res.end();
-                });
+                })
+                //
+                // const enclaveKey = getEnclaveKey(dbName);
+                // enclaves[enclaveKey].createCollection(enclaveKey, [], (err, result) => {
+                //     if (err) {
+                //         logger.error("Failed to create database", err);
+                //         res.statusCode = 500;
+                //         res.end();
+                //         return;
+                //     }
+                //
+                //     enclaves[dbName] = enclaveKey;
+                //     res.statusCode = 201;
+                //     res.end();
+                // });
             });
         }
     }).catch((err) => {

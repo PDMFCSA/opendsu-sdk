@@ -18,6 +18,11 @@ function createOpenDSUErrorWrapper(msg, error) {
     return error || msg;
 }
 
+/**
+ *
+ * @param {username: string, secret: string, uri: string, root: string} config
+ * @constructor
+ */
 function LightDBAdapter(config) {
     const logger = $$.getLogger("LightDBAdapter", "LightDBAdapter");
     const openDSU = require("opendsu");
@@ -28,9 +33,8 @@ function LightDBAdapter(config) {
     const CryptoSkills = w3cDID.CryptographicSkills;
     const baseConfig = config;
 
-    const EnclaveMixin = openDSU.loadAPI("enclave").EnclaveMixin;
-    EnclaveMixin(this);
-
+    // const EnclaveMixin = openDSU.loadAPI("enclave").EnclaveMixin;
+    // EnclaveMixin(this);
     logger.info(`Initializing CouchDB instance.`);
     if (typeof config.uri === "undefined")
         throw Error("URI was not specified for LightDBAdapter");
@@ -38,6 +42,24 @@ function LightDBAdapter(config) {
     const dbService = new DBService(config);
     const persistence = aclAPI.createEnclavePersistence(this);
     utils.bindAutoPendingFunctions(this);
+
+    const prefix = config.root.includes("/")
+        ? config.root.split("/").slice(config.root.split("/").length -2, config.root.split("/").length -1)[0]
+        : config.root;
+
+    let folderPath;
+    try {
+        const fs = require("fs");
+        folderPath = config.root.replace(/\/database\/?$/, '')
+        if(!fs.existsSync(folderPath))
+            fs.mkdirSync(folderPath, { recursive: true });
+    } catch(e) {
+        logger.info(`Failed to create folder ${folderPath}. ${e}`);
+    }
+
+    function getDbName(dbName){
+        return ["db", prefix, dbName].filter(e => !!e).join("_");
+    }
 
     /**
      * Creates a collection and sets indexes for it.
@@ -59,6 +81,7 @@ function LightDBAdapter(config) {
         //         return callback("Missing did for audit db");
         //     dbName = [dbName, forDID].join("_");
         // }
+        dbName = getDbName(dbName);
         dbName = dbService.changeDBNameToLowerCaseAndValidate(dbName);
 
         dbService.dbExists(dbName).then((exists) => {
@@ -78,6 +101,7 @@ function LightDBAdapter(config) {
      * @param {function(Error|null, {message: string})} callback - A callback function that returns an error (if any) and the result message.
      */
     this.removeCollection = (did, dbName, callback) => {
+        dbName = getDbName(dbName);
         dbName = dbService.changeDBNameToLowerCaseAndValidate(dbName);
 
         if (!dbService.dbExists(dbName))
@@ -129,6 +153,7 @@ function LightDBAdapter(config) {
      * @param {function(Error|undefined, void)} callback
      */
     this.addIndex = function (dbName, property, callback) {
+        dbName = getDbName(dbName);
         dbName = dbService.changeDBNameToLowerCaseAndValidate(dbName);
 
         dbService.addIndex(dbName, property)
@@ -144,6 +169,7 @@ function LightDBAdapter(config) {
      * @param {function(Error|undefined, number)} callback
      */
     this.count = function (dbName, callback) {
+        dbName = getDbName(dbName);
         dbName = dbService.changeDBNameToLowerCaseAndValidate(dbName);
 
         dbService.countDocs(dbName)
@@ -170,6 +196,7 @@ function LightDBAdapter(config) {
             forDID = undefined;
         }
 
+        dbName = getDbName(dbName);
         dbName = dbService.changeDBNameToLowerCaseAndValidate(dbName);
 
         dbService.insertDocument(dbName, pk, record)
@@ -193,6 +220,7 @@ function LightDBAdapter(config) {
             forDID = undefined;
         }
 
+        dbName = getDbName(dbName);
         dbName = dbService.changeDBNameToLowerCaseAndValidate(dbName);
 
         dbService.readDocument(dbName, pk)
@@ -218,6 +246,7 @@ function LightDBAdapter(config) {
             forDID = undefined;
         }
 
+        dbName = getDbName(dbName);
         dbName = dbService.changeDBNameToLowerCaseAndValidate(dbName);
 
         dbService.updateDocument(dbName, pk, record)
@@ -240,6 +269,7 @@ function LightDBAdapter(config) {
             dbName = forDID;
             forDID = undefined;
         }
+        dbName = getDbName(dbName);
         dbName = dbService.changeDBNameToLowerCaseAndValidate(dbName);
 
         dbService.deleteDocument(dbName, pk)
@@ -266,7 +296,8 @@ function LightDBAdapter(config) {
             dbName = forDid;
             forDid = undefined;
         }
-        
+
+        dbName = getDbName(dbName);
         dbName = dbService.changeDBNameToLowerCaseAndValidate(dbName);
 
         if (typeof filterConditions === "string") {
@@ -301,9 +332,9 @@ function LightDBAdapter(config) {
             if (!db)
                 return callback(undefined, []);
 
-            let direction = false;
+            let actualSort = undefined;
             if (sort === "desc" || sort === "dsc") {
-                direction = true;
+                actualSort = [sortingField, sort]
             }
 
             // let result;
@@ -314,7 +345,7 @@ function LightDBAdapter(config) {
             // }
 
             // TODO: Add filter
-            dbService.filter(dbName, filterConditions, [sortingField, sort], max)
+            dbService.filter(dbName, filterConditions, actualSort, max)
                 .then((response) => callback(undefined, response))
                 .catch((e) => callback(createOpenDSUErrorWrapper(`Filter operation failed on ${dbName}`, e)));
         }).catch((e) => callback(createOpenDSUErrorWrapper(`open operation failed on ${dbName}`, e)))
@@ -324,23 +355,29 @@ function LightDBAdapter(config) {
      * Retrieves a single record from the specified table.
      *
      * @param {string} did - The table name from which the record will be retrieved.
-     * @param {string} tableName - The table name from which the record will be retrieved.
+     * @param {string} dbName - The table name from which the record will be retrieved.
      * @param {function(Error|undefined, {[key: string]: any})} callback
      */
-    this.getOneRecord = (did, tableName, callback) => {
-        tableName = dbService.changeDBNameToLowerCaseAndValidate(tableName);
+    this.getOneRecord = (did, dbName, callback) => {
+        if (!callback){
+            callback = dbName;
+            dbName = did;
+            did = undefined;
+        }
+        dbName = getDbName(dbName);
+        dbName = dbService.changeDBNameToLowerCaseAndValidate(dbName);
 
-        dbService.listDocuments(tableName, {limit: 1})
+        dbService.listDocuments(dbName, {limit: 1})
             .then((response) => {
                 if (!Array.isArray(response)) {
-                    return callback(createOpenDSUErrorWrapper(`Invalid response from List documents in ${tableName}`), undefined);
+                    return callback(createOpenDSUErrorWrapper(`Invalid response from List documents in ${dbName}`), undefined);
                 }
                 if (!response.length) {
                     return callback();
                 }
                 callback(undefined, response[0])
             })
-            .catch((e) => callback(createOpenDSUErrorWrapper(`Failed to fetch record from ${tableName}`, e)));
+            .catch((e) => callback(createOpenDSUErrorWrapper(`Failed to fetch record from ${dbName}`, e)));
     }
 
     /**
@@ -356,6 +393,7 @@ function LightDBAdapter(config) {
             forDID = undefined;
         }
 
+        dbName = getDbName(dbName);
         dbName = dbService.changeDBNameToLowerCaseAndValidate(dbName);
 
         dbService.listDocuments(dbName)

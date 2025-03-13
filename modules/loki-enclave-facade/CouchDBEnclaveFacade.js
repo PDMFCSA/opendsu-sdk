@@ -8,6 +8,11 @@ function CouchDBEnclaveFacade(rootFolder, autosaveInterval, adaptorConstructorFu
     const EnclaveMixin = openDSU.loadAPI("enclave").EnclaveMixin;
     EnclaveMixin(this);
 
+    if (typeof rootFolder !== "string") {
+        throw new Error("Invalid rootFolder. It must be a string.");
+    }
+    logger.info(`db root folder ${rootFolder}`);
+
     let refreshInProgress = false;
 
     this.close = async () => {
@@ -189,7 +194,8 @@ function CouchDBEnclaveFacade(rootFolder, autosaveInterval, adaptorConstructorFu
     this.storageDB = new LightDBAdapter({
         uri: config.db.uri,
         username: config.db.user,
-        secret: config.db.secret
+        secret: config.db.secret,
+        root: rootFolder
     }, this);
     this.finishInitialisation();
 }
