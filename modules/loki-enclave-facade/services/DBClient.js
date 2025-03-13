@@ -1,6 +1,5 @@
 const {normalizeNumber, validateSort, buildSelector, DBKeys, pruneOpenDSUFields, remapObject} = require("../utils");
 let logger;
-const nano = require("nano");
 const {OpenDSUKeys} = require("../utils/constants");
 const {processInChunks} = require("../utils/chunk");
 const {ensureAuth} = require("./utils");
@@ -13,8 +12,8 @@ async function addIndex(client, database, properties) {
         return false;
     }
 
-    if (!await this.dbExists(database))
-        throw new Error(`Table "${database}" does not exist.`);
+    // if (!await this.dbExists(database))
+    //     throw new Error(`Table "${database}" does not exist.`);
 
     properties = Array.isArray(properties) ? properties : [properties];
     for (let indexedProp of properties){
@@ -135,7 +134,6 @@ class DatabaseClient {
 
     /**
      * Retrieves a document by its ID from the specified databse.
-     * @param {string} database
      * @param {string} _id - The ID of the document to retrieve.
      * @returns {Promise<{ pk: string, [key: string]: any }>} - The retrieved document.
      */
@@ -271,7 +269,7 @@ class DatabaseClient {
             // TODO - Needs improvement. temporary quick fix:
             if (error.error === "no_usable_index") {
                 try {
-                    await addIndex(this.client.bind(this), this.dbName, sort[0]);
+                    await addIndex.call(this, this.client, this.dbName, sort[0]);
                 } catch (e) {
                     throw new Error(`Failed to add index to table ${this.dbName}: ${error}`);
                 }

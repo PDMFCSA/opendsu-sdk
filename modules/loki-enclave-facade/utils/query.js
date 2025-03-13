@@ -1,4 +1,4 @@
-const {DBKeys, SortOrder, DBOperatorsMap, DSUKeysToDBMapping} = require("./constants");
+const {SortOrder, DBOperatorsMap, DSUKeysToDBMapping} = require("./constants");
 
 /**
  * Normalizes a numeric value, ensuring it is an integer greater than or equal to the specified minimum.
@@ -22,7 +22,7 @@ function normalizeNumber(value, min, defaultValue) {
         return (defaultValue < min) ? min : defaultValue;
 
     let num = Number(value);
-    if (!Number.isInteger(num)){
+    if (!Number.isInteger(num)) {
         if (num === Infinity)
             num = 250;
         else
@@ -45,22 +45,22 @@ function validateSort(sort) {
     // return [{[field]: sort[1]}];
 
     if (!sort || (Array.isArray(sort) && sort.length === 0))
-        return [DBKeys.TIMESTAMP, SortOrder.DSC];
+        return [];
 
     if (!Array.isArray(sort))
-        throw new TypeError(`Invalid sort format. Must be an array instead of ${JSON.stringify(sort)}.`);
+        throw new Error(`Invalid sort format. Must be an array instead of ${JSON.stringify(sort)}.`);
 
     const key = DSUKeysToDBMapping[sort[0]] || sort[0];
-    const value = sort[1] || SortOrder.DSC;
+    const value = sort[1] || SortOrder.DESC;
 
     if (typeof value !== "string")
-        throw new TypeError(`Invalid sort value "${value}" for key "${sort[0]}".`);
+        throw new Error(`Invalid sort value "${value}" for key "${key}".`);
 
     const normalizedValue = value.toLowerCase();
     if (!Object.values(SortOrder).includes(normalizedValue))
-        throw new Error(`Invalid sort order "${value}" for key "${sort[0]}". Use one of ${Object.values(SortOrder).join(", ")}.`);
+        throw new Error(`Invalid sort order "${value}" for key "${key}". Use one of ${Object.values(SortOrder).join(", ")}.`);
 
-    return [key, normalizedValue === SortOrder.DESC ? SortOrder.DSC : normalizedValue]
+    return [{[key]: normalizedValue === SortOrder.DSC ? SortOrder.DESC : normalizedValue}];
 }
 
 /**

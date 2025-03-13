@@ -10,13 +10,13 @@ const ReadUser = "reader"
 
 const SortOrder = {
     ASC: "asc",
-    DSC: "dsc",
+    DESC: "desc",
 
     /**
      * @deprecated Use `SortOrder.DSC` instead.
      * Kept for LokiDB compatibility. Will be removed in a future release.
      */
-    DESC: "desc" // LokiDB compatibility
+    DSC: "dsc"
 };
 
 const OpenDSUKeys = {
