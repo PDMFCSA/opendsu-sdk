@@ -41,25 +41,26 @@ function normalizeNumber(value, min, defaultValue) {
  * @throws {Error} - If the sort object contains invalid values.
  */
 function validateSort(sort) {
-    const field = DSUKeysToDBMapping[sort[0]] || sort[0];
-    return [{[field]: sort[1]}];
-    // // if null, undefined or {}
-    // if (!sort || (typeof sort === "object" && Object.keys(sort).length === 0))
-    //     return [{[DBKeys.TIMESTAMP]: SortOrder.ASC}];
-    //
-    // if (typeof sort !== "object")
-    //     throw new Error("Invalid sort format. Must be an object of key-value.");
-    //
-    // return Object.entries(sort).map(([key, value]) => {
-    //     if (typeof value !== "string")
-    //         throw new Error(`Invalid sort value "${value}" for key "${key}".`);
-    //
-    //     const normalizedValue = value.toLowerCase();
-    //     if (!Object.values(SortOrder).includes(normalizedValue))
-    //         throw new Error(`Invalid sort order for key "${key}". Use one of ${Object.values(SortOrder)}.`);
-    //
-    //     return {[key]: normalizedValue === SortOrder.DESC ? SortOrder.DSC : normalizedValue};
-    // })
+    // const field = DSUKeysToDBMapping[sort[0]] || sort[0];
+    // return [{[field]: sort[1]}];
+
+    if (!sort || (Array.isArray(sort) && sort.length === 0))
+        return [DBKeys.TIMESTAMP, SortOrder.DSC];
+
+    if (!Array.isArray(sort))
+        throw new Error(`Invalid sort format. Must be an array instead of ${JSON.stringify(sort)}.`);
+
+    const key = DSUKeysToDBMapping[sort[0]] || sort[0];
+    const value = sort[1] || SortOrder.DSC;
+
+    if (typeof value !== "string")
+        throw new Error(`Invalid sort value "${value}" for key "${sort[0]}".`);
+
+    const normalizedValue = value.toLowerCase();
+    if (!Object.values(SortOrder).includes(normalizedValue))
+        throw new Error(`Invalid sort order "${value}" for key "${sort[0]}". Use one of ${Object.values(SortOrder)}.`);
+
+    return [key, normalizedValue === SortOrder.DESC ? SortOrder.DSC : normalizedValue]
 }
 
 /**
