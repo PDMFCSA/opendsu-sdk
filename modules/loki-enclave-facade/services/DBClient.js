@@ -128,8 +128,8 @@ class DatabaseClient {
             if (error.statusCode === 404) {
                 if (document[OpenDSUKeys.FALLBACK_INSERT]) {
                     delete document[OpenDSUKeys.FALLBACK_INSERT];
-                    return this.insertDocument(database, _id, document);
                 }
+                return this.insertDocument(database, _id, document);
             }
             throw new Error(`Failed to update document "${_id}" from "${this.dbName}": ${error}`);
         }
