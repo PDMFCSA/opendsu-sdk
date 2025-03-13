@@ -313,8 +313,6 @@ function CouchDB(rootFolder, config) {
 
         const sortingField = getSortingKeyFromCondition(filterConditions);
 
-        logger.info(`$$$$: Sorting FIELD ${sortingField}.`);
-
         db.openDatabase(tableName).then((dbc) => {
             if (!dbc)
                 return callback(undefined, []);
@@ -568,14 +566,6 @@ function CouchDB(rootFolder, config) {
                 return callback(err);
             }
 
-            /*            result = result.filter(item => {
-                            if(typeof item.$loki !== "undefined"){
-                                return true;
-                            }
-                            logger.warn("A message was filtered out because wrong loki document structure");
-                            return false;
-                        });*/
-
             result = result.map(item => {
                 return item.pk
             })
@@ -704,7 +694,7 @@ function CouchDB(rootFolder, config) {
      * --------------------------------------------------------------------
      */
     const getPrivateInfoForDID = (did, callback) => {
-        this.getRecord(undefined, DIDS_PRIVATE_KEYS, did, (err, record) => {
+        this.getRecord(DIDS_PRIVATE_KEYS, did, (err, record) => {
             if (err) {
                 return callback(err);
             }
@@ -837,6 +827,7 @@ function CouchDB(rootFolder, config) {
      * --------------------------------------------------------------------
      */
 
+    // DO NOT REMOVE OPEN DSU WAY
     this.finishInitialisation();
 }
 
