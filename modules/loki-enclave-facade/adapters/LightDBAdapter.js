@@ -331,7 +331,15 @@ function LightDBAdapter(config) {
         tableName = dbService.changeDBNameToLowerCaseAndValidate(tableName);
 
         dbService.listDocuments(tableName, {limit: 1})
-            .then((response) => callback(undefined, !response.length ? undefined : response))
+            .then((response) => {
+                if (!Array.isArray(response)) {
+                    return callback(createOpenDSUErrorWrapper(`Invalid response from List documents in ${tableName}`), undefined);
+                }
+                if (!response.length) {
+                    return callback();
+                }
+                callback(undefined, response[0])
+            })
             .catch((e) => callback(createOpenDSUErrorWrapper(`Failed to fetch record from ${tableName}`, e)));
     }
 
