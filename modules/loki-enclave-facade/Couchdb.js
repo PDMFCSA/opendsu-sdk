@@ -2,7 +2,7 @@ const {DBService} = require("./services");
 const {
     getSortingKeyFromCondition,
 } = require("./utils");
-
+const {OpenDSUKeys} = require("./utils/constants");
 function CouchDB(rootFolder, config) {
     const logger = $$.getLogger("CouchDB", "couchDB");
     const openDSU = require("opendsu");
@@ -192,6 +192,8 @@ function CouchDB(rootFolder, config) {
                 if(!dbc)
                     return callback(createOpenDSUErrorWrapper(`Could not update record collection ${tableName} does not exist!`));
                 
+                record[OpenDSUKeys.FALLBACK_INSERT] = true;
+
                 dbc.updateDocument(tableName, pk, record)(tableName, pk, record)
                     .then((response) => callback(undefined, response))
                     .catch((e) => callback(createOpenDSUErrorWrapper(e), undefined))
