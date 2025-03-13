@@ -54,8 +54,10 @@ class DatabaseClient {
      */
     async insertDocument(_id, document) {
         // TODO - Empty objects {} are not being validated.
+        let record
+
         try {
-            const record = await this.readDocument( _id);
+            record = await this.readDocument( _id);
         } catch  (e) {
             if (e.statusCode !== 404) {
                 throw e
@@ -75,7 +77,8 @@ class DatabaseClient {
             }
         }
 
-        throw new Error(`A record with PK "${_id}" already exists in ${this.dbName}`);
+        return record;
+        // throw new Error(`A record with PK "${_id}" already exists in ${this.dbName}`);
     }
 
     /**
