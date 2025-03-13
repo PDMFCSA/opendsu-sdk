@@ -54,7 +54,7 @@ function CouchDB(rootFolder, config) {
      * @param {function(Error|null, {message: string})} callback - A callback function that returns an error (if any) and the result message.
      */
     this.removeCollection = (collectionName, callback) => {
-        collectionName = db.changeDBNameToLowerCaseAndValidate(generateDBName(baseName + collectionName));
+        collectionName = db.changeDBNameToLowerCaseAndValidate(generateDBName(baseName, collectionName));
 
         db.dbExists(collectionName).then((exists) => {
             if (!exists)
@@ -83,7 +83,7 @@ function CouchDB(rootFolder, config) {
      * @param {function(Error|undefined, number)} callback
      */
     this.count = function (tableName, callback) {
-        tableName = db.changeDBNameToLowerCaseAndValidate(generateDBName(baseName + tableName));
+        tableName = db.changeDBNameToLowerCaseAndValidate(generateDBName(baseName, tableName));
 
         db.dbExists(tableName).then((exists) => {
             if (!exists)
@@ -118,7 +118,7 @@ function CouchDB(rootFolder, config) {
             indicesList = [];
         }
 
-        tableName = db.changeDBNameToLowerCaseAndValidate(generateDBName(baseName + tableName));
+        tableName = db.changeDBNameToLowerCaseAndValidate(generateDBName(baseName, tableName));
 
         db.dbExists(tableName).then((exists) => {
             if (exists)
@@ -137,7 +137,7 @@ function CouchDB(rootFolder, config) {
      * @param {function(Error|undefined, void)} callback
      */
     this.addIndex = function (tableName, property, callback) {
-        tableName = db.changeDBNameToLowerCaseAndValidate(generateDBName(baseName + tableName));
+        tableName = db.changeDBNameToLowerCaseAndValidate(generateDBName(baseName, tableName));
 
         db.addIndex(tableName, property)
             .then((r) => callback(undefined))
@@ -153,7 +153,7 @@ function CouchDB(rootFolder, config) {
      * @param {function(Error|undefined, { [key: string]: any })} callback
      */
     this.insertRecord = (tableName, pk, record, callback) => {
-        tableName = db.changeDBNameToLowerCaseAndValidate(generateDBName(baseName + tableName));
+        tableName = db.changeDBNameToLowerCaseAndValidate(generateDBName(baseName, tableName));
 
         db.dbExists(tableName).then((exists) => {
             if (!exists)
@@ -182,7 +182,7 @@ function CouchDB(rootFolder, config) {
      * @param {function(Error|undefined, { [key: string]: any })} callback
      */
     this.updateRecord = function (tableName, pk, record, callback) {
-        tableName = db.changeDBNameToLowerCaseAndValidate(generateDBName(baseName + tableName));
+        tableName = db.changeDBNameToLowerCaseAndValidate(generateDBName(baseName, tableName));
 
         db.dbExists(tableName).then((exists) => {
             if (!exists)
@@ -202,7 +202,7 @@ function CouchDB(rootFolder, config) {
      * @param {function(Error|undefined, {pk: string, [key: string]: any})} callback
      */
     this.deleteRecord = function (tableName, pk, callback) {
-        tableName = db.changeDBNameToLowerCaseAndValidate(generateDBName(baseName + tableName));
+        tableName = db.changeDBNameToLowerCaseAndValidate(generateDBName(baseName, tableName));
 
         db.dbExists(tableName).then((exists) => {
             if (!exists)
@@ -221,7 +221,7 @@ function CouchDB(rootFolder, config) {
      * @param {function(Error|undefined, {[key: string]: any})} callback
      */
     this.getOneRecord = function (tableName, callback) {
-        tableName = db.changeDBNameToLowerCaseAndValidate(generateDBName(baseName + tableName));
+        tableName = db.changeDBNameToLowerCaseAndValidate(generateDBName(baseName, tableName));
 
         db.dbExists(tableName).then((exists) => {
             if (!exists)
@@ -241,7 +241,7 @@ function CouchDB(rootFolder, config) {
      * @param {function(Error|undefined, Array<{[key: string]: any}>)} callback
      */
     this.getAllRecords = (tableName, callback) => {
-        tableName = db.changeDBNameToLowerCaseAndValidate(generateDBName(baseName + tableName));
+        tableName = db.changeDBNameToLowerCaseAndValidate(generateDBName(baseName, tableName));
 
         db.dbExists(tableName).then((exists) => {
             if (!exists)
@@ -261,7 +261,7 @@ function CouchDB(rootFolder, config) {
      * @param {function(Error|undefined, { [key: string]: any })} callback
      */
     this.getRecord = function (tableName, pk, callback) {
-        tableName = db.changeDBNameToLowerCaseAndValidate(generateDBName(baseName + tableName));
+        tableName = db.changeDBNameToLowerCaseAndValidate(generateDBName(baseName, tableName));
 
         db.dbExists(tableName).then((exists) => {
             if (!exists)
@@ -283,7 +283,7 @@ function CouchDB(rootFolder, config) {
      * @param {function(Error|undefined, Array<{[key: string]: any }>)} callback
      */
     this.filter = function (tableName, filterConditions, sort, max, callback) {
-        tableName = db.changeDBNameToLowerCaseAndValidate(generateDBName(baseName + tableName));
+        tableName = db.changeDBNameToLowerCaseAndValidate(generateDBName(baseName, tableName));
 
         if (typeof filterConditions === "string") {
             filterConditions = [filterConditions];
