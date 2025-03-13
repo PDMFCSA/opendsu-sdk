@@ -161,10 +161,10 @@ function parseQueryPart(queryPart) {
  * @throws {Error} - Throws an error if the input is not a valid array.
  */
 function buildSelector(query) {
-    if (typeof query === "undefined")
+    if (typeof query === "undefined" || query === null)
         return {timestamp: {$gt: null}};
 
-    if (typeof query === "object" && query !== null && Object.keys(query).length === 0)
+    if (typeof query === "object" && Object.keys(query).length === 0)
         return {timestamp: {$gt: null}}; // TODO
 
     if (!Array.isArray(query) || !query.every(item => typeof item === "string" && validateQueryOperators(item)))
