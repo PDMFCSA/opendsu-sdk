@@ -191,8 +191,6 @@ function CouchDB(rootFolder, config) {
             db.openDatabase(tableName).then((dbc) => {
                 if(!dbc)
                     return callback(createOpenDSUErrorWrapper(`Could not update record collection ${tableName} does not exist!`));
-                
-                record[OpenDSUKeys.FALLBACK_INSERT] = true;
 
                 dbc.updateDocument(tableName, pk, record)(tableName, pk, record)
                     .then((response) => callback(undefined, response))
