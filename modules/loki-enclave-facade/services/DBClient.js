@@ -53,6 +53,7 @@ class DatabaseClient {
      * @throws {Error} - Throws an error if any operation fails, including checking if the record exists or inserting the record.
      */
     async insertDocument(_id, document) {
+        _id = _id + "";
         // TODO - Empty objects {} are not being validated.
         let record
 
@@ -88,6 +89,7 @@ class DatabaseClient {
      * @returns {Promise<{ pk: string, [key: string]: any }>} - The retrieved document.
      */
     async readDocument(_id) {
+        _id = _id + "";
         try {
             const document = await this.connection.get(_id);
             return remapObject(document);
@@ -108,6 +110,7 @@ class DatabaseClient {
      * @throws {Error} - If the operation fails.
      */
     async updateDocument(_id, document) {
+        _id = _id + "";
         try {
             const dbRecord = await this.connection.get(_id);
             const _rev = dbRecord[DBKeys.REV];
@@ -142,6 +145,7 @@ class DatabaseClient {
      * @throws {Error} - If the operation fails.
      */
     async deleteDocument(_id) {
+        _id = _id + "";
         try {
             const document = await this.connection.get(_id);
             await this.connection.destroy(_id, document[DBKeys.REV]);
