@@ -1,4 +1,4 @@
-const {getLokiEnclaveFacade} = require("./utils");
+const {getCouchEnclaveFacade} = require("./utils");
 const constants = require("./constants");
 
 function LokiDBPathStrategy(storageFolder, config) {
@@ -15,7 +15,7 @@ function LokiDBPathStrategy(storageFolder, config) {
     let initialised = false;
     const init = async () => {
         try {
-            enclaveDSU = getLokiEnclaveFacade(storageFolder);
+            enclaveDSU = getCouchEnclaveFacade(storageFolder);
         } catch (e) {
             throw createOpenDSUErrorWrapper(`Failed to load enclave DSU`, e);
         }

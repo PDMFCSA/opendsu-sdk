@@ -16,6 +16,23 @@ const getLokiEnclaveFacade = (storageFile) => {
     return $$.lokiEnclaveFacade;
 }
 
+const getCouchEnclaveFacade = (storageFile) => {
+    if (typeof $$.couchEnclaveFacade === "undefined") {
+        try {
+            fs.accessSync(path.dirname(storageFile));
+        } catch (e) {
+            fs.mkdirSync(path.dirname(storageFile), {recursive: true});
+        }
+        const couchEnclaveFacadeModule = require("loki-enclave-facade");
+        const createCouchEnclaveFacadeInstance = couchEnclaveFacadeModule.createCouchDBEnclaveFacadeInstance;
+        $$.lokiEnclaveFacade = createCouchEnclaveFacadeInstance(storageFile);
+    }
+
+    return $$.couchEnclaveFacade;
+}
+
+
 module.exports = {
-    getLokiEnclaveFacade
+    getLokiEnclaveFacade,
+    getCouchEnclaveFacade
 }

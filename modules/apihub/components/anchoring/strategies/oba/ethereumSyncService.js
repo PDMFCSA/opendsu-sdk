@@ -1,5 +1,5 @@
 const {ALIAS_SYNC_ERR_CODE, ANCHOR_ALREADY_EXISTS_ERR_CODE} = require("../../utils");
-const {getLokiEnclaveFacade} = require("./lokiEnclaveFacadeSingleton");
+const {getCouchEnclaveFacade} = require("./lokiEnclaveFacadeSingleton");
 const {getLogFilePath} = require("./getLogFilePath");
 const {getDBFilePath} = require("./getDBFilePath");
 
@@ -19,7 +19,7 @@ function EthereumSyncService(server, config) {
     const openDSU = require("opendsu");
     const utils = openDSU.loadAPI("utils");
     const TaskCounter = require("swarmutils").TaskCounter;
-    let lokiEnclaveFacade = getLokiEnclaveFacade(DB_STORAGE_FILE);
+    let lokiEnclaveFacade = getCouchEnclaveFacade(DB_STORAGE_FILE);
     const ANCHORS_TABLE_NAME = "anchors_table";
     let syncInProgress = false;
     const {ETH} = require("../index");

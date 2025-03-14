@@ -4,6 +4,7 @@ const adapterImpls = {
     local: require("./adapters/localMQAdapter.js"),
     solace: require("./adapters/solaceMQAdapter.js"),
     loki: require("./adapters/lokiMQAdapter.js"),
+    couch: require("./adapters/couchMQAdapter.js"),
     lightdb: require("./adapters/lighDBEnclaveAdapter.js")
 };
 

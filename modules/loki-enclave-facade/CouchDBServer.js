@@ -48,7 +48,7 @@ function CouchDBServer(config, callback) {
             return new Promise((resolve, reject) => {
                 const enclaveName = entry.name;
                 const enclaveKey = getEnclaveKey(enclaveName);
-                enclaves[enclaveName] = LokiEnclaveFacade.createLokiEnclaveFacadeInstance(path.join(lightDBStorage, enclaveName, DATABASE));
+                enclaves[enclaveName] = LokiEnclaveFacade.createCouchDBEnclaveFacadeInstance(path.join(lightDBStorage, enclaveName, DATABASE));
                 resolve()
                 // dbAdapter.createCollection(undefined, enclaveKey, [], (err) => {
                 //     if (err) {
@@ -309,7 +309,7 @@ function CouchDBServer(config, callback) {
                         res.write("Already exists");
                         return res.end();
                     }
-                    enclaves[dbName] = LokiEnclaveFacade.createLokiEnclaveFacadeInstance(path.join(storage, DATABASE));
+                    enclaves[dbName] = LokiEnclaveFacade.createCouchDBEnclaveFacadeInstance(path.join(storage, DATABASE));
                     res.statusCode = 201;
                     res.end();
                 })

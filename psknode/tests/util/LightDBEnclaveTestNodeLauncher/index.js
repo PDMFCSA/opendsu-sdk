@@ -6,12 +6,12 @@ const logger = new Logger("[LightDBEnclaveTestNodeLauncherWorkerBoot]");
 async function startLightDBInstance(config) {
     if (!process.env.LIGHT_DB_SERVER_ADDRESS) {
         const lightDBPort = process.env.LIGHT_DB_PORT || 8081;
-        const {createLightDBServerInstance} = require("loki-enclave-facade");
+        const {createCouchDBServerInstance} = require("loki-enclave-facade");
         const storage = process.env.LIGHT_DB_STORAGE || config.lightDBStorage || path.join(config.rootFolder, "external-volume/lightDB");
         config.lightDBStorage = storage;
         config.lightDBPort = lightDBPort;
         return new Promise((resolve, reject) => {
-            createLightDBServerInstance(config, (err) => {
+            createCouchDBServerInstance(config, (err) => {
                 if (err) {
                     logger.error(`Failed to start LightDB instance`);
                     return reject(err);

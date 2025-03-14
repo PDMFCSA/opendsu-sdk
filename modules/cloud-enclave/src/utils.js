@@ -7,6 +7,16 @@ const getLokiEnclaveFacade = (pth) => {
     return $$.LokiEnclaveFacade;
 }
 
+const getCouchEnclaveFacade = (pth) => {
+    if (typeof $$.CouchEnclaveFacade === "undefined") {
+        const couchEnclaveFacadeModule = require("loki-enclave-facade");
+        $$.CouchEnclaveFacade = couchEnclaveFacadeModule.createCouchDBEnclaveFacadeInstance(pth);
+    }
+
+    return $$.LokiEnclaveFacade;
+}
+
 module.exports = {
-    getLokiEnclaveFacade
+    getLokiEnclaveFacade,
+    getCouchEnclaveFacade
 }

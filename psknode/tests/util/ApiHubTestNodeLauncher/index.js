@@ -159,8 +159,8 @@ function ApiHubTestNodeLauncher(options) {
                 lightDBStorage: lightDBStorage || require("path").join(rootFolder, "lightDBStorage"),
             }
 
-            const createLightDBServerInstance = require("loki-enclave-facade").createLightDBServerInstance;
-            await $$.promisify(createLightDBServerInstance)(lightDBServerOptions);
+            const createCouchDBServerInstance = require("loki-enclave-facade").createCouchDBServerInstance;
+            await $$.promisify(createCouchDBServerInstance)(lightDBServerOptions);
             const apiHubNode = useWorker
                 ? await createApiHubInstanceWorkerAsync({port: apiHubPort, rootFolder})
                 : await createApiHubInstanceAsync(apiHubPort, rootFolder);
