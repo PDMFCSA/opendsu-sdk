@@ -528,7 +528,7 @@ module.exports = function (server) {
         recursiveRegistry();
     });
 
-    server.put("/activateFixedURL", require("./utils").bodyReaderMiddleware);
+    server.put("/activateFixedURL", require("../../http-wrapper/utils/middlewares").bodyReaderMiddleware);
     server.put("/activateFixedURL", function activate(req, res, next) {
         if (!lightDBEnclaveClient) {
             return setTimeout(() => {
