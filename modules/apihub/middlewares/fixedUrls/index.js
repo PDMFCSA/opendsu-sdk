@@ -47,9 +47,25 @@ module.exports = function (server) {
     function respond(res, content, statusCode) {
         if (statusCode) {
             res.statusCode = statusCode;
-            logger.audit(0x102, `Responding to url ${res.req.url} with status code ${statusCode}`);
+            let code = 0x104;
+
+            if(res.req.url.includes('leaflets'))
+                code = 0x102;
+
+            if(res.req.url.includes('metadata'))
+                code = 0x106;
+
+            logger.audit(code, `Responding to url ${res.req.url} with status code ${statusCode}`);
         } else {
-            logger.audit(0x101, `Successful serving url ${res.req.url}`);
+            let code = 0x103;
+
+            if(res.req.url.includes('leaflets'))
+                code = 0x101;
+
+            if(res.req.url.includes('metadata'))
+                code = 0x105;
+
+            logger.audit(code, `Successful serving url ${res.req.url}`);
             res.statusCode = 200;
         }
         const fixedURLExpiry = server.config.fixedURLExpiry || DEFAULT_MAX_AGE;
@@ -512,7 +528,7 @@ module.exports = function (server) {
         recursiveRegistry();
     });
 
-    server.put("/activateFixedURL", require("../../http-wrapper/utils/middlewares").bodyReaderMiddleware);
+    server.put("/activateFixedURL", require("./utils").bodyReaderMiddleware);
     server.put("/activateFixedURL", function activate(req, res, next) {
         if (!lightDBEnclaveClient) {
             return setTimeout(() => {
