@@ -25,7 +25,7 @@ const getCouchEnclaveFacade = (storageFile) => {
         }
         const couchEnclaveFacadeModule = require("loki-enclave-facade");
         const createCouchEnclaveFacadeInstance = couchEnclaveFacadeModule.createCouchDBEnclaveFacadeInstance;
-        $$.lokiEnclaveFacade = createCouchEnclaveFacadeInstance(storageFile);
+        $$.couchEnclaveFacade = createCouchEnclaveFacadeInstance(storageFile);
     }
 
     return $$.couchEnclaveFacade;
