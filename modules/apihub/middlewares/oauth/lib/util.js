@@ -449,8 +449,10 @@ function decryptRefreshTokenCookie(encryptedRefreshToken, callback) {
 }
 
 function getPublicKeyFromJWKSEndpoint(jwksEndpoint, accessToken, callback) {
+    printDebugLog(`requesting new public key from ${jwksEndpoint} with access token ${accessToken}...`)
     http.doGet(jwksEndpoint, (err, rawData) => {
         if (err) {
+            printDebugLog(`Failed to retrieve new public key from ${jwksEndpoint}: ${err}`)
             return callback(err);
         }
 
@@ -458,12 +460,20 @@ function getPublicKeyFromJWKSEndpoint(jwksEndpoint, accessToken, callback) {
         try {
             parsedData = JSON.parse(rawData);
         } catch (e) {
+            printDebugLog(`Failed to parse response from ${jwksEndpoint}: ${err} - raw data: ${rawData}`)
+            return callback(e);
+        }
+        let parsedAccessToken;
+        try {
+            parsedAccessToken = parseAccessToken(accessToken);
+        } catch (e) {
+            printDebugLog(`Failed to parse access token: ${err} - raw token: ${accessToken}`)
             return callback(e);
         }
 
-        const parsedAccessToken = parseAccessToken(accessToken);
         publicKey = parsedData.keys.find(key => key.use === "sig" && key.kid === parsedAccessToken.header.kid);
         if (!publicKey) {
+            printDebugLog(`Could not get public key for the provided token's signature verification.`)
             return callback(Error(`Could not get public key for the provided token's signature verification.`))
         }
 
@@ -473,6 +483,7 @@ function getPublicKeyFromJWKSEndpoint(jwksEndpoint, accessToken, callback) {
 
 function getPublicKey(jwksEndpoint, rawAccessToken, callback) {
     if (publicKey) {
+        printDebugLog(`Retrieving cached public key`)
         return callback(undefined, publicKey);
     }
 
@@ -487,17 +498,25 @@ function validateAccessToken(jwksEndpoint, accessToken, callback) {
 
         crypto.jsonWebTokenAPI.verify(accessToken, publicKey, (err, verified) => {
             if (err || !verified) {
+                printDebugLog(`First validation of access token ${accessToken} with public key ${publicKey} failed. refreshing public key...`)
                 getPublicKeyFromJWKSEndpoint(jwksEndpoint, accessToken, (err, publicKey) => {
                     if (err) {
                         return callback(err);
                     }
 
-                    crypto.jsonWebTokenAPI.verify(accessToken, publicKey, callback);
+                    crypto.jsonWebTokenAPI.verify(accessToken, publicKey, (err, verified) => {
+                        if (err || !verified){
+                            printDebugLog(`Second validation of access token ${accessToken} with public key ${publicKey} failed.`)
+                            return callback(err || new Error(`Failed to validate access token: ${err || 'Invalid token'}`));
+                        }
+                        printDebugLog(`token validated`)
+                        callback()
+                    });
                 });
 
                 return;
             }
-
+            printDebugLog(`token validated`)
             callback();
         });
     })
