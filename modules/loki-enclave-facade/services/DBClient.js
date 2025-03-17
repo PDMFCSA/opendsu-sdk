@@ -143,8 +143,16 @@ class DatabaseClient {
             const document = await this.connection.get(_id);
             return remapObject(document);
         } catch (error) {
-            if (error.statusCode !== 404)
-                logger.error(`Failed to retrieve document ${_id} from database ${this.dbName}:`, error);
+            if (error.statusCode !== 404) {
+                // Overwrite error response when the document is deleted.
+                error = {
+                    ...error,
+                    description: "missing",
+                    reason: "missing",
+                    message: "missing"
+                };
+                // logger.error(`Failed to retrieve document ${_id} from database ${this.dbName}:`, error);
+            }
             throw error;
         }
     }
