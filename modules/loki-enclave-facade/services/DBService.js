@@ -14,7 +14,7 @@ let dbService;
  */
 class DBService {
     /**
-     * @param {{uri: string, username?: string, secret?: string}} config - Configuration object containing database connection details.
+     * @param {{uri: string, username?: string, secret?: string, readOnlyMode: boolean}} config - Configuration object containing database connection details.
      */
     constructor(config) {
         if (dbService)
@@ -94,6 +94,10 @@ class DBService {
      * @returns {Promise<boolean>} - `true` if the database exists, `false` otherwise.
      */
     async dbExists(dbName) {
+        if (this.config.readOnlyMode){
+            logger.debug(`Presuming existence of Database "${dbName}"`);
+            return true;
+        }
         try {
             dbName = this.changeDBNameToLowerCaseAndValidate(dbName);
             const dbList = await this.client.db.list();
@@ -257,6 +261,8 @@ class DBService {
      * @returns {Promise<boolean>} - True if the database was successfully deleted.
      */
     async deleteDatabase(dbName) {
+        if (this.config.readOnlyMode)
+            throw new Error(`DB service in read only mode. Cannot delete databases`)
         try {
             dbName = this.changeDBNameToLowerCaseAndValidate(dbName);
             await this.client.db.destroy(dbName);
@@ -280,6 +286,8 @@ class DBService {
      */
     async listDatabases(verbose = false) {
         const self = this;
+        if (this.config.readOnlyMode)
+            throw new Error(`DB service in read only mode. Cannot list databases`)
         try {
             const list = await this.client.db.list();
             if (!verbose)
