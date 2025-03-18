@@ -1,6 +1,6 @@
 const LightDBAdapter = require("./adapters/LightDBAdapter");
 const path = require("path");
-const logger = $$.getLogger("LightDBServer", "LokiEnclaveFacade");
+const logger = $$.getLogger("CouchDBServer", "CouchDBEnclaveFacade");
 const DATABASE = "database";
 const getEnclaveKey = (name) => `enclave_${name}`.replaceAll(".", "_");
 
