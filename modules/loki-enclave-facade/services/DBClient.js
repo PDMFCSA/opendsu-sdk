@@ -4,59 +4,6 @@ const {OpenDSUKeys} = require("../utils/constants");
 const {processInChunks} = require("../utils/chunk");
 const {ensureAuth} = require("./utils");
 
-async function addIndex(client, database, properties) {
-    // database = this.changeDBNameToLowerCaseAndValidate(database);
-
-    if (!properties || (Array.isArray(properties) && properties.length === 0)) {
-        logger.info(`No indexes provided for table: ${database}. Skipping index creation.`);
-        return false;
-    }
-
-    // if (!await this.dbExists(database))
-    //     throw new Error(`Table "${database}" does not exist.`);
-
-    properties = Array.isArray(properties) ? properties : [properties];
-    for (let indexedProp of properties){
-        let index = `${indexedProp}_index`;
-        try {
-            await client.use(database).createIndex({
-                name: index,
-                index: {
-                    fields: [indexedProp]
-                },
-                type: "json" // default
-            });
-
-            logger.info(`Added index ${index} for table "${database}".`);
-
-            const asc_index = `${index}_ascending`;
-            await client.use(database).createIndex({
-                name: asc_index,
-                index: {
-                    fields: [{[indexedProp]: "asc"}]
-                },
-                type: "json" // default
-            });
-
-            logger.info(`Added index ${asc_index} for table "${database}" with ${indexedProp} asc.`);
-
-            const desc_index = `${index}_descending`;
-            await client.use(database).createIndex({
-                name: desc_index,
-                index: {
-                    fields: [{[indexedProp]: "desc"}]
-                },
-                type: "json" // default
-            });
-
-            logger.info(`Added index ${desc_index} for table "${database}" with ${indexedProp} desc.`);
-        } catch (err) {
-            throw new Error(`Could not add index ${index} on ${database}: ${err.message}`);
-        }
-    }
-    return true;
-}
-
 /**
  *
  */
@@ -87,8 +34,13 @@ class DatabaseClient {
      */
     async countDocs() {
         try {
-            const info = await this.connection.info();
-            return info.doc_count || 0;
+            // Get the total document count
+            const { doc_count = 0 } = await this.connection.info();
+
+            // Retrieve only design documents
+            const result = await this.connection.list({ startkey: '_design/', inclusive_end: false });
+            const designDocCount = result.rows.length;
+            return doc_count - designDocCount;
         } catch (error) {
             if (error.statusCode === 404) {
                 logger.warn(`Database "${this.dbName}" does not exist. Unable to count documents.`);
@@ -143,17 +95,14 @@ class DatabaseClient {
             const document = await this.connection.get(_id);
             return remapObject(document);
         } catch (error) {
-            if (error.statusCode !== 404) {
+            if (error.statusCode === 404) {
                 // Overwrite error response when the document is deleted.
-                error = {
-                    ...error,
-                    description: "missing",
-                    reason: "missing",
-                    message: "missing"
-                };
+                error.description = `document with id '${_id}' not found.`;
+                error.message = `document with id '${_id}' not found.`;
+                error.reason = "missing";
                 // logger.error(`Failed to retrieve document ${_id} from database ${this.dbName}:`, error);
             }
-            throw error;
+            throw error
         }
     }
 
@@ -250,41 +199,28 @@ class DatabaseClient {
      *
      * @async
      * @param {Array<string>} query - The query object to filter documents.
-     * @param {Array<Object>} [sort=[]] - Sorting criteria for the results.
+     * @param {Array<Object>} sort - Sorting criteria for the results.
      * @param {number} [limit=undefined] - Maximum number of documents to return.
      * @param {number} [skip=0] - Number of documents to skip before returning results.
      * @returns {Promise<Array<Object>>}g.
      * @throws {Error} If there is an issue querying the database.
      */
-    async filter(query, origSort = [], limit = undefined, skip = 0) {
+    async filter(query, sort = [], limit = undefined, skip = 0) {
         limit = normalizeNumber(limit, 1, undefined);
         skip = normalizeNumber(skip, 0, 0);
-        let sort = validateSort(origSort);
+        const _sort = validateSort(sort);
 
         const selector = buildSelector(query);
         const mangoQuery = {
             selector,
             // fields: [],
-            sort,
+            sort: _sort,
             skip,
             ...(limit ? {limit} : {})
         };
 
-        try {
-            const result = await this.connection.find(mangoQuery);
-            return processInChunks(result.docs, 2, (doc) => remapObject(doc));
-        } catch (error) {
-            // TODO - Needs improvement. temporary quick fix:
-            if (error.error === "no_usable_index") {
-                try {
-                    await addIndex.call(this, this.client, this.dbName, origSort[0]);
-                } catch (e) {
-                    throw new Error(`Failed to add index to table ${this.dbName}: ${error}`);
-                }
-                return this.filter(query, origSort, limit, skip);
-            }
-            throw new Error(`Error filtering documents from table ${this.dbName}: ${error}`);
-        }
+        const result = await this.connection.find(mangoQuery);
+        return processInChunks(result.docs, 2, (doc) => remapObject(doc));
     }
 }
 

@@ -287,11 +287,11 @@ class DBService {
 
             const databaseInfoList = [];
             for (const dbName of list) {
-                const metadata = await self.client.use(dbName).info(); // Get metadata of the database
+                const count = await self.countDocs(dbName);
                 databaseInfoList.push({
                     name: dbName,
                     type: "collection",
-                    count: metadata.doc_count || 0
+                    count: count || 0
                 });
             }
             return databaseInfoList;
@@ -330,6 +330,10 @@ class DBService {
             throw new Error(`Table "${database}" does not exist.`);
 
         properties = Array.isArray(properties) ? properties : [properties];
+        const invalidType = properties.some((prop) => typeof prop !== "string");
+        if (invalidType)
+            throw new Error(`Failed to add an index on ${database}: All properties must be of type string.`);
+
         for (let indexedProp of properties){
             let index = `${indexedProp}_index`;
             try {
@@ -451,7 +455,24 @@ class DBService {
      */
     async filter(database, query, sort = [], limit = undefined, skip = 0) {
         const db = await this.openDatabase(database);
-        return await db.filter(query, sort, limit, skip);
+
+        const filterWithRetry = async (attempt = 1) => {
+            try {
+                return await db.filter(query, sort, limit, skip);
+            } catch (err) {
+                if (err.error === "no_usable_index" && attempt === 1) {
+                    try {
+                        await this.addIndex(database, Object.keys(sort[0]));
+                        return await filterWithRetry(attempt + 1);
+                    } catch (e) {
+                        throw new Error(`Failed to add index to table ${database}: ${e}`);
+                    }
+                }
+                throw new Error(`Error filtering documents from table ${database}: ${err}`);
+            }
+        };
+
+        return filterWithRetry();
     }
 
 }

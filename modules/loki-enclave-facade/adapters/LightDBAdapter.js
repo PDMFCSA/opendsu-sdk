@@ -1,12 +1,12 @@
 const {
     Tables,
     Permissions,
+    SortOrder,
     getSortingKeyFromCondition,
     safeParseKeySSI,
     generateUniqueId
 } = require("../utils");
 const {DBService} = require("../services");
-
 const {parseConditionsToDBQuery} = require("../services/utils")
 
 /**
@@ -307,13 +307,13 @@ function LightDBAdapter(config) {
         if (typeof filterConditions === "function") {
             callback = filterConditions;
             filterConditions = undefined;
-            sort = "asc";
+            sort = SortOrder.ASC;
             max = Infinity;
         }
 
         if (typeof sort === "function") {
             callback = sort;
-            sort = "asc";
+            sort = SortOrder.ASC;
             max = Infinity;
         }
 
@@ -327,25 +327,12 @@ function LightDBAdapter(config) {
         }
 
         const sortingField = getSortingKeyFromCondition(filterConditions);
-
         dbService.openDatabase(dbName).then((db) => {
             if (!db)
                 return callback(undefined, []);
 
-            let actualSort = undefined;
-            if (sort === "desc" || sort === "dsc") {
-                actualSort = [sortingField, sort]
-            }
-
-            // let result;
-            // try {
-            //     result = db.find(filterConditions).simplesort(sortingField, direction).limit(max).data();
-            // } catch (err) {
-            //     return callback(createOpenDSUErrorWrapper(`Filter operation failed on ${dbName}`, err));
-            // }
-
-            // TODO: Add filter
-            dbService.filter(dbName, filterConditions, actualSort, max)
+            const newSort = [{[sortingField]: sort || SortOrder.ASC}];
+            dbService.filter(dbName, filterConditions, newSort, max)
                 .then((response) => callback(undefined, response))
                 .catch((e) => callback(createOpenDSUErrorWrapper(`Filter operation failed on ${dbName}`, e)));
         }).catch((e) => callback(createOpenDSUErrorWrapper(`open operation failed on ${dbName}`, e)))

@@ -36,22 +36,23 @@ function normalizeNumber(value, min, defaultValue) {
 /**
  * Validates and normalizes a sorting object or array.
  *
- * @param {[string, string]} sort - Sorting criteria.
+ * @param {[{[key:string]: "asc" | "desc"}]} sort - Sorting criteria.
  * @returns {Array<Object>} - Normalized sorting array.
  * @throws {Error} - If the sort object contains invalid values.
  */
 function validateSort(sort) {
-    // const field = DSUKeysToDBMapping[sort[0]] || sort[0];
-    // return [{[field]: sort[1]}];
-
     if (!sort || (Array.isArray(sort) && sort.length === 0))
         return [];
 
     if (!Array.isArray(sort))
         throw new Error(`Invalid sort format. Must be an array instead of ${JSON.stringify(sort)}.`);
 
-    const key = DSUKeysToDBMapping[sort[0]] || sort[0];
-    const value = sort[1] || SortOrder.DESC;
+    let [key, value] = Object.entries(sort[0])[0];
+    key = DSUKeysToDBMapping[key] || key;
+    value = value || SortOrder.DESC;
+
+    if (typeof key !== "string")
+        throw new Error(`Invalid sort key "${key}".`);
 
     if (typeof value !== "string")
         throw new Error(`Invalid sort value "${value}" for key "${key}".`);
