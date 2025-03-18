@@ -347,6 +347,7 @@ class DBService {
             try {
                 await this.client.use(database).createIndex({
                     name: index,
+                    ddoc: `${index}_ddoc`,
                     index: {
                         fields: [indexedProp]
                     },
@@ -358,6 +359,7 @@ class DBService {
                 const asc_index = `${index}_ascending`;
                 await this.client.use(database).createIndex({
                     name: asc_index,
+                    ddoc: `${asc_index}_ddoc`,
                     index: {
                         fields: [{[indexedProp]: "asc"}]
                     },
@@ -369,6 +371,7 @@ class DBService {
                 const desc_index = `${index}_descending`;
                 await this.client.use(database).createIndex({
                     name: desc_index,
+                    ddoc: `${desc_index}_ddoc`,
                     index: {
                         fields: [{[indexedProp]: "desc"}]
                     },
