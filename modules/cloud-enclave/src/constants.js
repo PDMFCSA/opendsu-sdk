@@ -12,6 +12,7 @@ module.exports = {
         ADMIN: "admin"
     },
     PERSISTENCE_TYPES: {
-        LOKI: "loki"
+        LOKI: "loki",
+        COUCH: "couch"
     }
 };

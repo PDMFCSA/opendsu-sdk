@@ -12,7 +12,7 @@ PersistenceFactory.prototype.create = (storageType, ...args) => {
     return factories[storageType](...args);
 }
 
-const {createLokiEnclaveFacadeInstance} = require("loki-enclave-facade");
-PersistenceFactory.prototype.register(PERSISTENCE_TYPES.LOKI, createLokiEnclaveFacadeInstance);
+const {createCouchDBEnclaveFacadeInstance} = require("loki-enclave-facade");
+PersistenceFactory.prototype.register(PERSISTENCE_TYPES.COUCH, createCouchDBEnclaveFacadeInstance);
 
 module.exports = new PersistenceFactory();
