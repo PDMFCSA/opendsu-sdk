@@ -11,7 +11,7 @@ function CloudEnclave(config) {
     }
     if (!config.persistence) {
         config.persistence = {
-            type: "loki",
+            type: "couch",
             options: [path.join(config.rootFolder, config.name, "db")]
         }
     }
