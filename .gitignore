@@ -7,5 +7,4 @@ psknode/bundles
 !psknode/bin/scripts/migrations/
 node_modules
 builds/output/*
-tests
 latest-change-set.txt
