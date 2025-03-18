@@ -72,7 +72,7 @@ function LightDBAdapter(config) {
     this.createCollection = function (forDID, dbName, indexes, callback) {
         if (!callback) {
             callback = indexes;
-            indexes = [];
+            indexes = dbName;
             dbName = forDID;
             forDID = undefined;
         }
