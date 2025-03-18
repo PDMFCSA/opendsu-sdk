@@ -20,7 +20,7 @@ function createOpenDSUErrorWrapper(msg, error) {
 
 /**
  *
- * @param {username: string, secret: string, uri: string, root: string} config
+ * @param {username: string, secret: string, uri: string, root: string, readOnlyMode: boolean} config
  * @constructor
  */
 function LightDBAdapter(config) {

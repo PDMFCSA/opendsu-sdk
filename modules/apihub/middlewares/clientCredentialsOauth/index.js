@@ -16,6 +16,7 @@ function ClientCredentialsOauth(server) {
         util.validateAccessToken(jwksEndpoint, token, (err) => {
             if (err) {
                 res.statusCode = 401;
+                util.printDebugLog(`Failed to validate OAuth token: ${err}`)
                 return res.end("Invalid token");
             }
 

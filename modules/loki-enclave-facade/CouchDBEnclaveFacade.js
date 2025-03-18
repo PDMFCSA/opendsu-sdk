@@ -191,11 +191,14 @@ function CouchDBEnclaveFacade(rootFolder, autosaveInterval, adaptorConstructorFu
         throw new Error(`Failed to read apihub. Error: ${e.message || e}}`);
     }
 
+    const readOnlyFlag = process.env.READ_ONLY_MODE || false;
+
     this.storageDB = new LightDBAdapter({
         uri: config.db.uri,
         username: config.db.user,
         secret: config.db.secret,
-        root: rootFolder
+        root: rootFolder,
+        readOnlyMode: readOnlyFlag
     }, this);
     this.finishInitialisation();
 }
