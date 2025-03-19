@@ -14,7 +14,7 @@ let dbService;
  */
 class DBService {
     /**
-     * @param {{uri: string, username?: string, secret?: string, readOnlyMode: boolean}} config - Configuration object containing database connection details.
+     * @param {{uri: string, username?: string, secret?: string, readOnlyMode: boolean, debug: boolean}} config - Configuration object containing database connection details.
      */
     constructor(config) {
         if (dbService)
@@ -33,6 +33,13 @@ class DBService {
         ].forEach((m) => ensureAuth(this, logger, m));
 
         this.databases = {}
+
+
+    }
+
+    debug(...args){
+        if (this.config.debug)
+            logger.debug(...args);
     }
 
     /**
@@ -73,19 +80,18 @@ class DBService {
     /**
      * Converts to lower case and checks if DB Name is valid for couch db.
      * @param {string} dbName
-     * @param {string} [forDid]
      * @returns {string} - dbName if the database name is valid, `false` otherwise.
      */
     changeDBNameToLowerCaseAndValidate(dbName){
-        dbName =  dbName.toLowerCase().replaceAll(':', '_').replaceAll(".", "-");
+        const newDbName =  dbName.toLowerCase().replaceAll(':', '_').replaceAll(".", "-");
 
-        if(!this.isValidCouchDbName(dbName)) {
-            const message = `Invalid db name "${dbName}". Only lowercase characters (a-z), digits (0-9), and any of the characters _, $, (, ), +, -, and / are allowed. Must begin with a letter.`
+        if(!this.isValidCouchDbName(newDbName)) {
+            const message = `Invalid db name "${newDbName}". Only lowercase characters (a-z), digits (0-9), and any of the characters _, $, (, ), +, -, and / are allowed. Must begin with a letter.`
             logger.error(message);
             throw new Error(message);
         }
-
-        return dbName;
+        this.debug(`converted ${dbName} to couch compatible: ${newDbName} `);
+        return newDbName;
     }
     
     /**
@@ -98,11 +104,16 @@ class DBService {
             logger.debug(`Presuming existence of Database "${dbName}"`);
             return true;
         }
+
         try {
             dbName = this.changeDBNameToLowerCaseAndValidate(dbName);
+            if (dbName in this.databases)
+                return true;
+            this.debug(`Checking existence of Database "${dbName}"`);
             const dbList = await this.client.db.list();
             return dbList.includes(dbName);
         } catch (error) {
+            this.debug(`Failed to check if database "${dbName}" exists: ${error.message || error}`);
             throw new Error(`Failed to check if database "${dbName}" exists: ${error.message || error}`);
         }
     }
@@ -219,6 +230,7 @@ class DBService {
         } catch (err) {
             if (err.message.includes("the file already exists"))
                 return true;
+            this.debug(`Fail creating database or adding indexes for ${dbName}: ${err.message || err}`)
             throw new Error(`Fail creating database or adding indexes for ${dbName}: ${err.message || err}`);
         }
     }
@@ -238,7 +250,8 @@ class DBService {
 
             function openAndCache(){
                 if (!(dbName in self.databases)){
-                    self.databases[dbName] = new DatabaseClient(self.client, dbName);
+                    self.databases[dbName] = new DatabaseClient(self.client, dbName, self.config.debug);
+                    self.debug(`Created new database instance for "${dbName}"`);
                 }
                 return self.databases[dbName];
             }
@@ -251,6 +264,7 @@ class DBService {
             // TODO - Remove, return DBService instance
             return openAndCache()
         } catch (error) {
+            this.debug(`Error in openDatabase: ${error.message || error}`)
             throw new Error(`Error in openDatabase: ${error.message || error}`);
         }
     }
@@ -273,6 +287,7 @@ class DBService {
                 logger.warn(`Database "${dbName}" does not exist. No deletion required.`);
                 return true;
             }
+            this.debug(`Error deleting database ${dbName}: ${error}`)
             throw new Error(`Error deleting database ${dbName}: ${error}`);
         }
     }
@@ -304,6 +319,7 @@ class DBService {
             }
             return databaseInfoList;
         } catch (error) {
+            this.debug(`Error listing databases: ${error}`)
             throw new Error(`Error listing databases: ${error}`);
         }
     }
@@ -342,8 +358,11 @@ class DBService {
         if (invalidType)
             throw new Error(`Failed to add an index on ${database}: All properties must be of type string.`);
 
+        const currentIndexes = await this.client.use(database).list({ startkey: '_design/', inclusive_end: false });
+
         for (let indexedProp of properties){
             let index = `${indexedProp}_index`;
+
             try {
                 await this.client.use(database).createIndex({
                     name: index,

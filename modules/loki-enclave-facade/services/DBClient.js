@@ -8,10 +8,11 @@ const {ensureAuth} = require("./utils");
  *
  */
 class DatabaseClient {
-    constructor(client, dbName) {
+    constructor(client, dbName, debug) {
         logger = $$.getLogger(`DatabaseClient -  ${dbName}`);
         this.dbName = dbName;
         this.client = client;
+        this._debug = debug;
 
         this.connection = this.client.use(dbName);
         [
@@ -23,6 +24,11 @@ class DatabaseClient {
             this.listDocuments,
             this.filter,
         ].forEach((m) => ensureAuth(this, logger, m));
+    }
+
+    debug(...args){
+        if (this._debug)
+            logger.debug(...args);
     }
 
 
@@ -46,6 +52,7 @@ class DatabaseClient {
                 logger.warn(`Database "${this.dbName}" does not exist. Unable to count documents.`);
                 return 0;
             }
+            this.debug(`Failed to retrieve document count for database ${this.dbName}: ${error}`)
             throw new Error(`Failed to retrieve document count for database ${this.dbName}: ${error}`);
         }
     }
@@ -64,8 +71,10 @@ class DatabaseClient {
             const record = await this.readDocument( _id);
         } catch  (e) {
             if (e.statusCode !== 404) {
+                this.debug(`Could not read PK "${_id}" from ${this.dbName}`, e)
                 throw e
             }
+            let id;
             try {
 
                 const insert = {
@@ -74,13 +83,20 @@ class DatabaseClient {
                     [DBKeys.TIMESTAMP]: Date.now()
                 };
 
-                const {id} = await this.connection.insert(insert);
-                return await this.readDocument(id);
+                id = (await this.connection.insert(insert)).id;
             } catch (err) {
+                this.debug(`A record with PK "${_id}" already exists in ${this.dbName}`)
                 throw err;
+            }
+            try {
+                return await this.readDocument(id);
+            } catch (e) {
+                this.debug(`Failed to read record with PK "${_id}"  in ${this.dbName} after inserting`, e)
+                throw e;
             }
         }
 
+        this.debug(`A record with PK "${_id}" already exists in ${this.dbName}`)
         throw new Error(`A record with PK "${_id}" already exists in ${this.dbName}`);
     }
 
@@ -100,7 +116,7 @@ class DatabaseClient {
                 error.description = `document with id '${_id}' not found.`;
                 error.message = `document with id '${_id}' not found.`;
                 error.reason = "missing";
-                // logger.error(`Failed to retrieve document ${_id} from database ${this.dbName}:`, error);
+                this.debug(`Failed to retrieve document ${_id} from database ${this.dbName}:`, error);
             }
             throw error
         }
@@ -116,6 +132,7 @@ class DatabaseClient {
      * @throws {Error} - If the operation fails.
      */
     async updateDocument(_id, document) {
+        let response;
         try {
             _id = _id.toString();
             const dbRecord = await this.connection.get(_id);
@@ -131,17 +148,26 @@ class DatabaseClient {
                 [DBKeys.TIMESTAMP]: Date.now()
             };
 
-            const response = await this.connection.insert(update);
-            return await this.readDocument(response.id);
+            response = await this.connection.insert(update);
         } catch (error) {
             if (error.statusCode === 404) {
                 if (document[OpenDSUKeys.FALLBACK_INSERT]) { // used by fixedURL
                     delete document[OpenDSUKeys.FALLBACK_INSERT];
+                    this.debug(`Falling back to inserting document "${_id}" from "${this.dbName}" after 404: ${error}`);
                     return this.insertDocument(_id, document);
                 }
+                this.debug(`Failed to retrieve document ${_id} from database ${this.dbName} after 404: ${error}`);
                 throw new Error(`Failed to update document "${_id}" from "${this.dbName}": Not found.`);
             }
+            this.debug(`Failed to update document "${_id}" from "${this.dbName}": ${error}`);
             throw new Error(`Failed to update document "${_id}" from "${this.dbName}": ${error}`);
+        }
+
+        try {
+            return await this.readDocument(response.id);
+        } catch (e) {
+            this.debug(`Failed to retrieve document ${_id} from database ${this.dbName} after updating`, e)
+            throw e;
         }
     }
 
@@ -158,9 +184,12 @@ class DatabaseClient {
             await this.connection.destroy(_id, document[DBKeys.REV]);
             return {[OpenDSUKeys.PK]: _id};
         } catch (error) {
-            if (error.statusCode === 404)
+            if (error.statusCode === 404){
+                this.debug(`Document ${_id} not found in database ${this.dbName}. Skipping deletion.`);
                 return {[OpenDSUKeys.PK]: _id};
+            }
 
+            this.debug(`Failed to delete document ${_id} from database ${this.dbName}: ${error}`);
             throw new Error(`Error deleting document ${_id} from table ${this.dbName}: ${error}`);
         }
     }
@@ -186,10 +215,11 @@ class DatabaseClient {
 
             if (limit && Number.isInteger(limit) && limit > 0)
                 queryOptions.limit = limit;
-
+            this.debug(`Listing documents from database ${this.dbName} with options: ${JSON.stringify(queryOptions)}`);
             const response = await this.connection.list(queryOptions);
             return processInChunks(response.rows, 2, (row) => remapObject(row.doc));
         } catch (error) {
+            this.debug(`Failed to list documents from database ${this.dbName}: ${error}`);
             throw new Error(`Error listing documents from database ${this.dbName}: ${error}`);
         }
     }
@@ -218,7 +248,7 @@ class DatabaseClient {
             skip,
             ...(limit ? {limit} : {})
         };
-
+        this.debug(`Filtering documents from database ${this.dbName} with options: ${JSON.stringify(mangoQuery)}`);
         const result = await this.connection.find(mangoQuery);
         return processInChunks(result.docs, 2, (doc) => remapObject(doc));
     }

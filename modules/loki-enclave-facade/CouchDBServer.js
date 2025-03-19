@@ -242,7 +242,10 @@ function CouchDBServer(config, callback) {
                         const cb = (err, result) => {
                             if (err) {
                                 res.statusCode = 500;
-                                logger.debug(`Error while executing command ${command.commandName}`, err);
+                                const minusCbArgs =  [...args];
+                                if(typeof args[args.length -1] === "function")
+                                    minusCbArgs.pop()
+                                logger.debug(`Error while executing command ${command.commandName} in database ${req.params.dbName} with args: ${minusCbArgs}`, err);
                                 res.write(`Error while executing command`);
                                 return res.end();
                             }

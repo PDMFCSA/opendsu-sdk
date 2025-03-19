@@ -207,7 +207,13 @@ module.exports = function (server) {
         },
         isKnown: function (task, callback) {
             let target = taskRegistry.createModel(task);
-            lightDBEnclaveClient.getRecord($$.SYSTEM_IDENTIFIER, HISTORY_TABLE, target.pk, callback);
+            lightDBEnclaveClient.getRecord($$.SYSTEM_IDENTIFIER, HISTORY_TABLE, target.pk, (err, known) => {
+                if (err || !known) {
+                    logger.debug(`Task ${target.pk} not found in history`);
+                    return callback(err || new Error(`Task ${target.pk} not found in history`));
+                }
+                callback(undefined, known);
+            });
         },
         schedule: function (criteria, callback) {
             if(server.readOnlyModeActive){
@@ -343,14 +349,14 @@ module.exports = function (server) {
                         });
                         return taskRegistry.markAsDone(task.url, (err) => {
                             if (err) {
-                                logger.log("Failed to remove a task that we weren't able to resolve");
+                                logger.log("Failed to remove a task that we weren't able to resolve", err);
                                 return;
                             }
                         });
                     }
                     return taskRegistry.markAsDone(task.url, (err) => {
                         if (err) {
-                            logger.log("Failed to remove a task that we weren't able to resolve");
+                            logger.log("Failed to remove a task that we weren't able to resolve", err);
                             return;
                         }
                         //if failed we add the task back to the end of the queue...
@@ -381,7 +387,7 @@ module.exports = function (server) {
 
                         taskRegistry.markAsDone(task.url, (err) => {
                             if (err) {
-                                logger.warn("Failed to mark request as done in lightDBEnclaveClient", task);
+                                logger.warn("Failed to mark request as done in lightDBEnclaveClient", task, err);
                             }
                         });
 
@@ -391,7 +397,7 @@ module.exports = function (server) {
                 } else {
                     taskRegistry.markAsDone(task.url, (err) => {
                         if (err) {
-                            logger.warn("Failed to mark request as done in lightDBEnclaveClient", task);
+                            logger.warn("Failed to mark request as done in lightDBEnclaveClient", task, err);
                         }
                         taskRunner.resolvePendingReq(task.url, result, 204);
                     });

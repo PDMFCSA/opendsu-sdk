@@ -198,7 +198,8 @@ function CouchDBEnclaveFacade(rootFolder, autosaveInterval, adaptorConstructorFu
         username: config.db.user,
         secret: config.db.secret,
         root: rootFolder,
-        readOnlyMode: readOnlyFlag
+        readOnlyMode: readOnlyFlag,
+        debug: config.db.debug || false
     }, this);
     this.finishInitialisation();
 }

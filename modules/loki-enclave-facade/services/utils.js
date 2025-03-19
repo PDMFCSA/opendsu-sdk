@@ -16,7 +16,7 @@ function ensureAuth(self, logger, method){
         } catch (e){
             if (e.statusCode === 401 || e['status-code'] === 401) {
                 try {
-                    console.debug(`Cookie expired - Re-authenticating with CouchDB server`);
+                    logger.debug(`Cookie expired - Re-authenticating with CouchDB server`);
                     await self.client.auth(self.config.username, self.config.secret);
                 } catch (err){
                     throw new Error(`Failed to authenticate with CouchDB server to redo the ${name} operation. Error: ${err.message || err}. Original Error: ${e.message || e}`);
