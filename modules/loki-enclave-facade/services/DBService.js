@@ -90,7 +90,6 @@ class DBService {
             logger.error(message);
             throw new Error(message);
         }
-        this.debug(`converted ${dbName} to couch compatible: ${newDbName} `);
         return newDbName;
     }
     

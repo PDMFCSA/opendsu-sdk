@@ -14,6 +14,12 @@ const logger = $$.getLogger("FixedUrl", "apihub/logger");
 
 module.exports = function (server) {
 
+    function debug(...args){
+        if (server.config.db.debug){
+            logger.debug(...args);
+        }
+    }
+
     const workingDir = path.join(server.rootFolder, "external-volume", "fixed-urls");
     const storage = path.join(workingDir, "storage");
     let lightDBEnclaveClient = enclaveAPI.initialiseLightDBEnclave(DATABASE);
@@ -113,12 +119,20 @@ module.exports = function (server) {
         register: function (task, callback) {
             let newRecord = taskRegistry.createModel(task);
             newRecord.__fallbackToInsert = true
-            return lightDBEnclaveClient.updateRecord($$.SYSTEM_IDENTIFIER, HISTORY_TABLE, newRecord.pk, newRecord,  callback);
+            debug("Registering task in history table", JSON.stringify(newRecord));
+            return lightDBEnclaveClient.updateRecord($$.SYSTEM_IDENTIFIER, HISTORY_TABLE, newRecord.pk, newRecord,  (err, result) => {
+                if (err){
+                    debug("Error registering task in history table", err);
+                }
+                callback(err, result);
+            });
         },
         add: function (task, callback) {
             let newRecord = taskRegistry.createModel(task);
+            debug("Adding task to tasks table", JSON.stringify(newRecord));
             lightDBEnclaveClient.getRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, newRecord.pk, function (err, record) {
                 if (err || !record) {
+                    debug("Task not found in tasks table, adding it", JSON.stringify(newRecord));
                     return lightDBEnclaveClient.insertRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, newRecord.pk, newRecord, (insertError)=>{
                         //if we fail... could be that the task is ready register by another request due to concurrency
                         //we do another getRecord and if fails we return the original insert record error
@@ -127,13 +141,17 @@ module.exports = function (server) {
                             // and we hope to have enough invalidation of the task to don't have garbage
                             newRecord.counter = 2;
                             newRecord.__fallbackToInsert = true;
+                            debug("Failed to insert task in task table. trying to update", JSON.stringify(newRecord));
                             return lightDBEnclaveClient.updateRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, newRecord.pk, newRecord, err => {
                                 if(err){
+                                    debug("Failed to update task in task table", err);
                                     return callback(err);
                                 }
+                                debug("Task added to tasks table", JSON.stringify(newRecord));
                                 callback(undefined);
                             });
                         }
+                        debug("Task added to tasks table", JSON.stringify(newRecord));
                         callback(undefined);
                     });
                 }
@@ -142,36 +160,46 @@ module.exports = function (server) {
                 }
                 record.counter++;
                 record.__fallbackToInsert = true;
+                debug("Task already exists in tasks table, updating", JSON.stringify(record));
                 return lightDBEnclaveClient.updateRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, record.pk, record, callback);
             });
         },
         remove: function (task, callback) {
             let toBeRemoved = taskRegistry.createModel(task);
+            debug("Checking existence of task from tasks table before deleting", JSON.stringify(toBeRemoved));
             lightDBEnclaveClient.getRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, toBeRemoved.pk, function (err, record) {
                 if (err || !record) {
+                    debug("Task not found in tasks table, ignoring deletion", JSON.stringify(toBeRemoved));
                     return callback(undefined);
                 }
                 if (record.counter && record.counter > 1) {
                     record.counter = 1;
                     record.__fallbackToInsert = true;
+                    debug("found record to delete from table tasks. updating instead", JSON.stringify(record));
                     return lightDBEnclaveClient.updateRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, toBeRemoved.pk, record, callback);
                 }
 
+                debug("found record to delete from table tasks. updating instead", JSON.stringify(record));
                 lightDBEnclaveClient.deleteRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, toBeRemoved.pk, err => {
                     if (err) {
+                        debug("Error deleting task from tasks table", err);
                         return callback(err);
                     }
                     const end = Date.now();
+                    debug(`Task ${task.url} deleted from tasks table`);
                     callback(undefined);
                 });
             });
         },
         getOneTask: function (callback) {
+            debug("Getting one task from tasks table");
             lightDBEnclaveClient.getOneRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, function (err, task) {
                 if (err) {
+                    debug("Error getting task from tasks table", err);
                     return callback(err);
                 }
                 if (!task) {
+                    debug("No tasks found in tasks table, waiting for new tasks");
                     return callback(undefined);
                 }
                 if (taskRegistry.inProgress[task.url]) {
@@ -181,6 +209,7 @@ module.exports = function (server) {
                 }
                 taskRegistry.markInProgress(task.url);
                 const end = Date.now();
+                debug(`Task ${task.url} picked for processing. Took ${end - task.timestamp}ms.`);
                 callback(undefined, task);
             });
         },
@@ -189,14 +218,17 @@ module.exports = function (server) {
         },
         isScheduled: function (task, callback) {
             let tobeChecked = taskRegistry.createModel(task);
+            debug("Checking existence of task from tasks table (isScheduled)", JSON.stringify(tobeChecked));
             lightDBEnclaveClient.getRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, tobeChecked.pk, function (err, task) {
                 if (err || !task) {
+                    debug("Task not found in tasks table", JSON.stringify(tobeChecked));
                     return callback(undefined, undefined);
                 }
                 callback(undefined, task);
             });
         },
         markInProgress: function (task) {
+            debug(`Marking task ${task} as in progress`);
             taskRegistry.inProgress[task] = true;
         },
         markAsDone: function (task, callback) {
@@ -207,11 +239,13 @@ module.exports = function (server) {
         },
         isKnown: function (task, callback) {
             let target = taskRegistry.createModel(task);
+            debug("Checking existence of task from history table (isKnown)", JSON.stringify(target));
             lightDBEnclaveClient.getRecord($$.SYSTEM_IDENTIFIER, HISTORY_TABLE, target.pk, (err, known) => {
                 if (err || !known) {
                     logger.debug(`Task ${target.pk} not found in history`);
                     return callback(err || new Error(`Task ${target.pk} not found in history`));
                 }
+                debug("Task found in history table", JSON.stringify(known));
                 callback(undefined, known);
             });
         },
@@ -219,11 +253,14 @@ module.exports = function (server) {
             if(server.readOnlyModeActive){
                 return callback(new Error("FixedURL scheduling is not possible when server is in readOnly mode"));
             }
+            debug("filtering history table to schedule task", JSON.stringify(criteria));
             lightDBEnclaveClient.filter($$.SYSTEM_IDENTIFIER, HISTORY_TABLE, criteria, function (err, records) {
                 if (err) {
                     if (err.code === 404) {
+                        debug("No tasks found in history table - table does not exist apparently");
                         return callback();
                     }
+                    debug("Error filtering history table", err);
                     return callback(err);
                 }
                 function createTask() {
@@ -244,11 +281,14 @@ module.exports = function (server) {
             });
         },
         cancel: function (criteria, callback) {
+            debug("filtering history table to cancel task", JSON.stringify(criteria));
             lightDBEnclaveClient.filter($$.SYSTEM_IDENTIFIER, HISTORY_TABLE, criteria, async function (err, tasks) {
                 if (err) {
                     if (err.code === 404) {
+                        debug("No tasks found in history table - table does not exist apparently");
                         return callback();
                     }
+                    debug("Error filtering history table", err);
                     return callback(err);
                 }
 
@@ -269,9 +309,10 @@ module.exports = function (server) {
                         }
                     }
                 } catch (err) {
+                    debug("Error canceling tasks", err);
                     return callback(err);
                 }
-
+                debug("Tasks cancelled successfully");
                 callback(undefined);
             });
         },
@@ -332,6 +373,7 @@ module.exports = function (server) {
             url = converter.toString().replace(urlBase, "");
 
             //executing the request
+            debug(`Executing task. making local request to ${url}`, JSON.stringify(task));
             server.makeLocalRequest("GET", url, "", {}, function (error, result) {
                 const end = Date.now();
                 if (error) {
@@ -361,6 +403,7 @@ module.exports = function (server) {
                         }
                         //if failed we add the task back to the end of the queue...
                         setTimeout(() => {
+                            debug("Rescheduling the task", task.url);
                             taskRegistry.add(task.url, (err) => {
                                 if (err) {
                                     logger.log("Failed to reschedule the task", task.url, err.message, err.code, err);
@@ -380,6 +423,7 @@ module.exports = function (server) {
                         return;
                     }
 
+                    debug(`Persisting ${task.url}`)
                     indexer.persist(task.url, result, function (err) {
                         if (err) {
                             logger.error("Not able to persist fixed url", task, err);
