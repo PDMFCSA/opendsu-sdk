@@ -192,11 +192,13 @@ function CouchDBEnclaveFacade(rootFolder, autosaveInterval, adaptorConstructorFu
     }
 
     const readOnlyFlag = process.env.READ_ONLY_MODE || false;
+    const userName = process.env.DB_USER || config.db.user;
+    const secret = process.env.DB_SECRET || config.db.secret;
 
     this.storageDB = new LightDBAdapter({
         uri: config.db.uri,
-        username: config.db.user,
-        secret: config.db.secret,
+        username: userName,
+        secret: secret,
         root: rootFolder,
         readOnlyMode: readOnlyFlag,
         debug: config.db.debug || false
