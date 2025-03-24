@@ -80,7 +80,7 @@ class DatabaseClient {
                 const insert = {
                     ...pruneOpenDSUFields(document),
                     [DBKeys.PK]: _id,
-                    [DBKeys.TIMESTAMP]: Date.now()
+                    [DBKeys.TIMESTAMP]: document[DBKeys.TIMESTAMP] || Date.now()
                 };
 
                 id = (await this.connection.insert(insert)).id;
