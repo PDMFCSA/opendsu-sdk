@@ -21,9 +21,9 @@ module.exports = function (server) {
     }
 
     const workingDir = path.join(server.rootFolder, "external-volume", "fixed-urls");
-    const storage = path.join(workingDir, "storage");
-    const dbPath = path.join(workingDir, "..", "lightDB", "FixedUrls.db", "datatabase");
-    let lightDBEnclaveClient = require("loki-enclave-facade").createCouchDBEnclaveFacadeInstance(dbPath);
+    const storage = path.join(workingDir, "..", "lightDB", "FixedUrls.db", "database");
+    let lightDBEnclaveClient = require("loki-enclave-facade").createCouchDBEnclaveFacadeInstance(storage);
+    // let lightDBEnclaveClient = enclaveAPI.initialiseLightDBEnclave(DATABASE);
 
     let watchedUrls = [];
     //we inject a helper function that can be called by different components or middleware to signal that their requests
@@ -112,13 +112,32 @@ module.exports = function (server) {
         }
     };
 
+    function createBulkPK(urls){
+        const url = urls.reduce((acc, url) => {
+            const params = url.searchParams;
+            const payload ={
+                gtin: params.get("gtin"),
+                batch: params.get("batch"),
+                lang: params.get("lang"),
+                leaflet_type: params.get("leaflet_type"),
+                epiMarket: params.get("epiMarket"),
+            }
+            return acc;
+        }, new URL(`${urls[0].origin}${urls[0].pathname}`));
+    }
+
     const taskRegistry = {
         inProgress: {},
         createModel: function (fixedUrl) {
-            return {url: fixedUrl, pk: getIdentifier(fixedUrl)};
+            if (!Array.isArray(fixedUrl))
+                return {url: fixedUrl, pk: getIdentifier(fixedUrl)};
+            return fixedUrl.map(url => ({url: url, pk: getIdentifier(url)}));
         },
         register: function (task, callback) {
             let newRecord = taskRegistry.createModel(task);
+
+
+
             newRecord.__fallbackToInsert = true
             debug("Registering task in history table", JSON.stringify(newRecord));
             return lightDBEnclaveClient.updateRecord($$.SYSTEM_IDENTIFIER, HISTORY_TABLE, newRecord.pk, newRecord,  (err, result) => {

@@ -9,6 +9,7 @@ module.exports = {
     HAS_READ_ACCESS: "hasReadAccess",
     HAS_ADMIN_ACCESS: "hasAdminAccess",
     INSERT_RECORD: "insertRecord",
+    INSERT_MANY: "insertMany",
     UPDATE_RECORD: "updateRecord",
     GET_RECORD: "getRecord",
     DELETE_RECORD: "deleteRecord",

@@ -75,6 +75,18 @@ function ProxyMixin(target) {
         target.__putCommandObject(commandNames.INSERT_RECORD, forDID, table, pk, encryptedRecord, callback);
     };
 
+    target.insertMany = (forDID, table, pks, plainRecords, encryptedRecords, callback) => {
+        if (typeof encryptedRecords === "function") {
+            callback = encryptedRecords;
+            encryptedRecords = undefined;
+        }
+
+        if (!encryptedRecords) {
+            encryptedRecords= plainRecords;
+        }
+        target.__putCommandObject(commandNames.INSERT_MANY, forDID, table, pks, encryptedRecords, callback);
+    };
+
     target.updateRecord = (forDID, table, pk, plainRecord, encryptedRecord, callback) => {
         if (typeof encryptedRecord === "function") {
             callback = encryptedRecord;
