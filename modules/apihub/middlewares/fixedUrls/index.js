@@ -22,7 +22,8 @@ module.exports = function (server) {
 
     const workingDir = path.join(server.rootFolder, "external-volume", "fixed-urls");
     const storage = path.join(workingDir, "storage");
-    let lightDBEnclaveClient = enclaveAPI.initialiseLightDBEnclave(DATABASE);
+    const dbPath = path.join(workingDir, "..", "lightDB", "FixedUrls.db", "datatabase");
+    let lightDBEnclaveClient = require("loki-enclave-facade").createCouchDBEnclaveFacadeInstance(dbPath);
 
     let watchedUrls = [];
     //we inject a helper function that can be called by different components or middleware to signal that their requests
@@ -501,7 +502,7 @@ module.exports = function (server) {
             if (err) {
                 logger.error("Failed to ensure folder structure due to", err);
             }
-            lightDBEnclaveClient.createDatabase(DATABASE, (err) => {
+            lightDBEnclaveClient.createDatabase(undefined, DATABASE, (err) => {
                 if (err) {
                     logger.debug("Failed to create database", err.message, err.code, err.rootCause);
                 }

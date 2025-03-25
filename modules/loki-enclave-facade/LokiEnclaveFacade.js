@@ -150,6 +150,8 @@ function LokiEnclaveFacade(rootFolder, autosaveInterval, adaptorConstructorFunct
         this.storageDB.createCollection(tableName, indicesList, callback);
     }
 
+    this.createDatabase = this.createCollection.bind(this)
+
     this.allowedInReadOnlyMode = function (functionName){
         let readOnlyFunctions = ["getCollections",
             "listQueue",

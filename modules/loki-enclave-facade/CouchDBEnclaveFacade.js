@@ -155,6 +155,8 @@ function CouchDBEnclaveFacade(rootFolder, autosaveInterval, adaptorConstructorFu
         this.storageDB.createCollection(tableName, indicesList, callback);
     }
 
+    this.createDatabase = this.createCollection;
+
     this.allowedInReadOnlyMode = function (functionName) {
         let readOnlyFunctions = ["getCollections",
             "listQueue",
