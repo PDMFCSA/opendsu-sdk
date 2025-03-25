@@ -36,10 +36,11 @@
     "devDependencies": {
         "@msgpack/msgpack": "^1.8.0",
         "browserify": "^17.0.0",
-        "common-shakeify": "^1.1.1",
-        "nano": "^10.1.4"
+        "common-shakeify": "^1.1.1"
+
     },
     "dependencies": {
+        "nano": "^10.1.4",
         "octopus": "git+http://git@github.com/opendsu/octopus.git"
     }
 }
