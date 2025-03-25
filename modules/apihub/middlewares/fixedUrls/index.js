@@ -22,7 +22,7 @@ module.exports = function (server) {
 
     const workingDir = path.join(server.rootFolder, "external-volume", "fixed-urls");
     const storage = path.join(workingDir, "storage");
-    const dbPath = path.join(workingDir, "..", "FixedUrls.db", "datatabase");
+    const dbPath = path.join(workingDir, "..", "lightDB", "FixedUrls.db", "datatabase");
     let lightDBEnclaveClient = require("loki-enclave-facade").createCouchDBEnclaveFacadeInstance(dbPath);
 
     let watchedUrls = [];
