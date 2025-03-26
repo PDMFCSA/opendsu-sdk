@@ -100,6 +100,38 @@ class DatabaseClient {
         throw new Error(`A record with PK "${_id}" already exists in ${this.dbName}`);
     }
 
+
+    async insertMany(_ids, documents) {
+        try {
+
+            // const insert = {
+            //     ...pruneOpenDSUFields(document),
+            //     [DBKeys.PK]: _id,
+            //     [DBKeys.TIMESTAMP]: document[DBKeys.TIMESTAMP] || Date.now()
+            // };
+
+            const docs = _ids.map((id, i) => {
+                return {
+                    ...pruneOpenDSUFields(documents[i]),
+                    [DBKeys.PK]: id,
+                    [DBKeys.TIMESTAMP]: documents[i][DBKeys.TIMESTAMP] || Date.now()
+                };
+            })
+
+            const responses = await this.connection.bulk({ docs: docs });
+
+            const failed = responses.filter((response) => {
+                const {id, rev, error, reason} = response;
+                return !!error;
+            }).map(({id, error, reason}) => ({ id, error, reason }));
+            if (failed.length) {
+                throw new Error(`Failed to insert ${failed.length}/${documents.length} documents: ${failed.map(({ id, error, reason }) => `${id}: ${error} - ${reason}`).join('\n')}`);
+            }
+        } catch (err) {
+            this.debug(`Failed to bulk insert: ${err}`)
+            throw err;
+        }
+    }
     /**
      * Retrieves a document by its ID from the specified databse.
      * @param {string} _id - The ID of the document to retrieve.
@@ -168,6 +200,42 @@ class DatabaseClient {
         } catch (e) {
             this.debug(`Failed to retrieve document ${_id} from database ${this.dbName} after updating`, e)
             throw e;
+        }
+    }
+
+    async updateMany(_ids, documents) {
+        try {
+
+            // const insert = {
+            //     ...pruneOpenDSUFields(document),
+            //     [DBKeys.PK]: _id,
+            //     [DBKeys.TIMESTAMP]: document[DBKeys.TIMESTAMP] || Date.now()
+            // };
+
+
+            const oldVersions = await this.connection.allDocs({ keys: _ids, include_docs: true });
+
+            const docs = _ids.map((id, i) => {
+                return {
+                    ...pruneOpenDSUFields(documents[i]),
+                    [DBKeys.PK]: id,
+                    [DBKeys.REV]: oldVersions[i].doc._rev,
+                    [DBKeys.TIMESTAMP]: documents[i][DBKeys.TIMESTAMP] || Date.now()
+                };
+            })
+
+            const responses = await this.connection.bulk({ docs: docs });
+
+            const failed = responses.filter((response) => {
+                const {id, rev, error, reason} = response;
+                return !!error;
+            }).map(({id, error, reason}) => ({ id, error, reason }));
+            if (failed.length) {
+                throw new Error(`Failed to update ${failed.length}/${documents.length} documents: ${failed.map(({ id, error, reason }) => `${id}: ${error} - ${reason}`).join('\n')}`);
+            }
+        } catch (err) {
+            this.debug(`Failed to bulk update: ${err}`)
+            throw err;
         }
     }
 

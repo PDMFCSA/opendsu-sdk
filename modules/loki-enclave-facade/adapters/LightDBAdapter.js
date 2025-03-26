@@ -204,6 +204,30 @@ function LightDBAdapter(config) {
             .catch((e) => callback(e, undefined));
     };
 
+    this.insertMany = async function (dbName, ids, records) {
+        dbName = getDbName(dbName);
+        dbName = dbService.changeDBNameToLowerCaseAndValidate(dbName);
+
+        try {
+            await dbService.insertMany(dbName, ids, records);
+        } catch (e) {
+            logger.error(`Failed to insert records into ${dbName}: ${e}`);
+            throw e
+        }
+    }
+
+    this.updateMany = async function (dbName, ids, records) {
+        dbName = getDbName(dbName);
+        dbName = dbService.changeDBNameToLowerCaseAndValidate(dbName);
+
+        try {
+            await dbService.updateMany(dbName, ids, records);
+        } catch (e) {
+            logger.error(`Failed to insert records into ${dbName}: ${e}`);
+            throw e
+        }
+    }
+
     /**
      * Get a record from the specified table.
      *

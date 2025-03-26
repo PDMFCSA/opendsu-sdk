@@ -133,19 +133,38 @@ module.exports = function (server) {
                 return {url: fixedUrl, pk: getIdentifier(fixedUrl)};
             return fixedUrl.map(url => ({url: url, pk: getIdentifier(url)}));
         },
-        register: function (task, callback) {
+        register: async function (task, callback) {
             let newRecord = taskRegistry.createModel(task);
-
-
-
             newRecord.__fallbackToInsert = true
-            debug("Registering task in history table", JSON.stringify(newRecord));
-            return lightDBEnclaveClient.updateRecord($$.SYSTEM_IDENTIFIER, HISTORY_TABLE, newRecord.pk, newRecord,  (err, result) => {
-                if (err){
-                    debug("Error registering task in history table", err);
-                }
-                callback(err, result);
-            });
+
+            if (!Array.isArray(newRecord)) { // legacy mode. used for single entries
+                debug("Registering task in history table", JSON.stringify(newRecord));
+                return lightDBEnclaveClient.updateRecord($$.SYSTEM_IDENTIFIER, HISTORY_TABLE, newRecord.pk, newRecord,  (err, result) => {
+                    if (err){
+                        debug("Error registering task in history table", err);
+                    }
+                    callback(err, result);
+                });
+            }
+            // bulk mode
+
+            const ids = newRecord.map(r => r.id)
+            try {
+                await lightDBEnclaveClient.insertMany(HISTORY_TABLE, ids, newRecord);
+            } catch (e){
+                debug("Error registering tasks in tasks table", e);
+                return callback(e);
+            }
+            callback(undefined);
+            // const gtin = new URL(task[0].url.searchParams.get("gtin"));
+            // if (!gtin)
+            //     return callback(new Error(`could not get gtin in url ${task[0].url}. Should be impossible`));
+            //
+            // taskRunner.schedule(`gtin == ${gtin}`, (err, results) => {
+            //     if (err)
+            //         return callback(err);
+            //     callback(undefined, results)
+            // })
         },
         add: function (task, callback) {
             let newRecord = taskRegistry.createModel(task);
@@ -374,7 +393,37 @@ module.exports = function (server) {
         }
     };
     const taskRunner = {
-        doItNow: function (task) {
+        doItNow: async function (tasks) {
+
+            if (!Array.isArray(tasks)){
+                tasks = [tasks]
+            }
+
+            for (let task of tasks){
+                logger.info("Executing task for url", task.url);
+                const fixedUrl = task.url;
+                //we need to do the request and save the result into the cache
+                let urlBase = `http://127.0.0.1`;
+                let url = urlBase;
+                if (!fixedUrl.startsWith("/")) {
+                    url += "/";
+                }
+                url += fixedUrl;
+
+                //let's create an url object from our string
+                let converter = new URL(url);
+                //we inject the request identifier
+                converter.searchParams.append(TAG_FIXED_URL_REQUEST, "true");
+                //this new url will contain our flag that prevents resolving in our middleware
+                url = converter.toString().replace(urlBase, "");
+
+                //executing the request
+                debug(`Executing task. making local request to ${url}`, JSON.stringify(task));
+
+                const result = await new Promise((resolve, reject) => {
+                    
+                })))
+            }
             logger.info("Executing task for url", task.url);
             const fixedUrl = task.url;
             //we need to do the request and save the result into the cache
@@ -384,6 +433,9 @@ module.exports = function (server) {
                 url += "/";
             }
             url += fixedUrl;
+
+            // DO everything
+
 
             //let's create an url object from our string
             let converter = new URL(url);
@@ -578,24 +630,26 @@ module.exports = function (server) {
             body = [body];
         }
 
-        function recursiveRegistry() {
-            if (body.length === 0) {
-                res.statusCode = 200;
-                res.end();
-                return;
+        // function recursiveRegistry() {
+        // if (body.length === 0) {
+        //     res.statusCode = 200;
+        //     res.end();
+        //     return;
+        // }
+        let fixedUrls = body;
+        taskRegistry.register(fixedUrls, function (err) {
+            if (err) {
+                console.error(err);
+                res.statusCode = 500;
+                return res.end(`Failed to register urls`);
             }
-            let fixedUrl = body.pop();
-            taskRegistry.register(fixedUrl, function (err) {
-                if (err) {
-                    console.error(err);
-                    res.statusCode = 500;
-                    return res.end(`Failed to register url`);
-                }
-                recursiveRegistry();
-            });
-        }
+            res.statusCode = 200;
+            res.end();
+            // recursiveRegistry();
+        });
 
-        recursiveRegistry();
+
+        // recursiveRegistry();
     });
 
     server.put("/activateFixedURL", require("../../http-wrapper/utils/middlewares").bodyReaderMiddleware);

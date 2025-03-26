@@ -418,6 +418,16 @@ class DBService {
         return await db.insertDocument(_id, document);
     }
 
+    async insertMany(database, _ids, documents){
+        const db = await this.openDatabase(database);
+        return db.insertMany(_ids, documents);
+    }
+
+    async updateMany(database, _ids, documents){
+        const db = await this.openDatabase(database);
+        return db.updateMany(_ids, documents);
+    }
+
     /**
      * Retrieves a document by its ID from the specified table.
      * @param {string} database

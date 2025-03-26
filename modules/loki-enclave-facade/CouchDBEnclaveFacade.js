@@ -157,6 +157,26 @@ function CouchDBEnclaveFacade(rootFolder, autosaveInterval, adaptorConstructorFu
 
     this.createDatabase = this.createCollection;
 
+
+    this.insertMany = async function (dbName, ids, records) {
+
+        try {
+            await this.storageDB.insertMany(dbName, ids, records);
+        } catch (e) {
+            logger.error(`Failed to insert records into ${dbName}: ${e}`);
+            throw e
+        }
+    }
+
+    this.updateMany = async function (dbName, ids, records) {
+        try {
+            await this.storageDB.updateMany(dbName, ids, records);
+        } catch (e) {
+            logger.error(`Failed to insert records into ${dbName}: ${e}`);
+            throw e
+        }
+    }
+
     this.allowedInReadOnlyMode = function (functionName) {
         let readOnlyFunctions = ["getCollections",
             "listQueue",
