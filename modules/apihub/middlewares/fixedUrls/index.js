@@ -113,44 +113,68 @@ module.exports = function (server) {
     };
 
     function createBulkPK(urls){
-        const url = urls.reduce((acc, url) => {
+        
+        const url = urls.reduce((acc, url, i) => {
             const params = url.searchParams;
-            const payload ={
-                gtin: params.get("gtin"),
-                batch: params.get("batch"),
-                lang: params.get("lang"),
-                leaflet_type: params.get("leaflet_type"),
-                epiMarket: params.get("epiMarket"),
+
+            if(i === 0){
+                const payload ={
+                    gtin: params.get("gtin"),
+                    batch: params.get("batch"),
+                    leaflet_type: params.get("leaflet_type"),
+                    epiMarket: params.get("epiMarket"),
+                }
+
+                let original = acc.set;
+                acc.set = function (key, value) {
+                    if(!value)
+                        return
+    
+                    return original.call(params, key, value)
+                }
+               
+
+                acc.set("gtin", payload.gtin);
+                acc.set("batch", payload.batch)
+                acc.set("leaflet_type", payload.leaflet_type)
+                acc.set("epiMarket", payload.epiMarket)
             }
+
+            acc.set("lang", [...acc.get("lang").split("-"), params.get("lang")].join("-"));
+
             return acc;
         }, new URL(`${urls[0].origin}${urls[0].pathname}`));
+
+        url.searchParams.sort();
+
+        return url;
     }
 
     const taskRegistry = {
         inProgress: {},
         createModel: function (fixedUrl) {
-            if (!Array.isArray(fixedUrl))
-                return {url: fixedUrl, pk: getIdentifier(fixedUrl)};
+            // if (!Array.isArray(fixedUrl))
+            //     return {url: fixedUrl, pk: getIdentifier(fixedUrl)};
             return fixedUrl.map(url => ({url: url, pk: getIdentifier(url)}));
         },
         register: async function (task, callback) {
             let newRecord = taskRegistry.createModel(task);
-            newRecord.__fallbackToInsert = true
+            // newRecord.__fallbackToInsert = true
 
-            if (!Array.isArray(newRecord)) { // legacy mode. used for single entries
-                debug("Registering task in history table", JSON.stringify(newRecord));
-                return lightDBEnclaveClient.updateRecord($$.SYSTEM_IDENTIFIER, HISTORY_TABLE, newRecord.pk, newRecord,  (err, result) => {
-                    if (err){
-                        debug("Error registering task in history table", err);
-                    }
-                    callback(err, result);
-                });
-            }
+            // if (!Array.isArray(newRecord)) { // legacy mode. used for single entries
+            //     debug("Registering task in history table", JSON.stringify(newRecord));
+            //     return lightDBEnclaveClient.updateRecord($$.SYSTEM_IDENTIFIER, HISTORY_TABLE, newRecord.pk, newRecord,  (err, result) => {
+            //         if (err){
+            //             debug("Error registering task in history table", err);
+            //         }
+            //         callback(err, result);
+            //     });
+            // }
             // bulk mode
 
             const ids = newRecord.map(r => r.id)
             try {
-                await lightDBEnclaveClient.insertMany(HISTORY_TABLE, ids, newRecord);
+                await lightDBEnclaveClient.updateMany(HISTORY_TABLE, ids, newRecord);
             } catch (e){
                 debug("Error registering tasks in tasks table", e);
                 return callback(e);
@@ -169,10 +193,14 @@ module.exports = function (server) {
         add: function (task, callback) {
             let newRecord = taskRegistry.createModel(task);
             debug("Adding task to tasks table", JSON.stringify(newRecord));
-            lightDBEnclaveClient.getRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, newRecord.pk, function (err, record) {
+
+            const pk = createBulkPK(task)
+
+
+            lightDBEnclaveClient.getRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, pk, function (err, record) {
                 if (err || !record) {
                     debug("Task not found in tasks table, adding it", JSON.stringify(newRecord));
-                    return lightDBEnclaveClient.insertRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, newRecord.pk, newRecord, (insertError)=>{
+                    return lightDBEnclaveClient.insertRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, pk, newRecord, (insertError)=>{
                         //if we fail... could be that the task is ready register by another request due to concurrency
                         //we do another getRecord and if fails we return the original insert record error
                         if(insertError){
@@ -181,7 +209,7 @@ module.exports = function (server) {
                             newRecord.counter = 2;
                             newRecord.__fallbackToInsert = true;
                             debug("Failed to insert task in task table. trying to update", JSON.stringify(newRecord));
-                            return lightDBEnclaveClient.updateRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, newRecord.pk, newRecord, err => {
+                            return lightDBEnclaveClient.updateRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, pk, newRecord, err => {
                                 if(err){
                                     debug("Failed to update task in task table", err);
                                     return callback(err);
@@ -200,7 +228,7 @@ module.exports = function (server) {
                 record.counter++;
                 record.__fallbackToInsert = true;
                 debug("Task already exists in tasks table, updating", JSON.stringify(record));
-                return lightDBEnclaveClient.updateRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, record.pk, record, callback);
+                return lightDBEnclaveClient.updateRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, pk, record, callback);
             });
         },
         remove: function (task, callback) {
@@ -302,21 +330,13 @@ module.exports = function (server) {
                     debug("Error filtering history table", err);
                     return callback(err);
                 }
-                function createTask() {
-                    if (records.length === 0) {
-                        return callback(undefined);
+
+                taskRegistry.add(records, function (err) {
+                    if (err) {
+                        return callback(err);
                     }
-
-                    let record = records.pop();
-                    taskRegistry.add(record.url, function (err) {
-                        if (err) {
-                            return callback(err);
-                        }
-                        createTask();
-                    });
-                }
-
-                createTask();
+                    callback();
+                });
             });
         },
         cancel: function (criteria, callback) {
@@ -420,9 +440,9 @@ module.exports = function (server) {
                 //executing the request
                 debug(`Executing task. making local request to ${url}`, JSON.stringify(task));
 
-                // const result = await new Promise((resolve, reject) => {
+                const result = await new Promise((resolve, reject) => {
                     
-                // })))
+                })
             }
             logger.info("Executing task for url", task.url);
             const fixedUrl = task.url;

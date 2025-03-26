@@ -215,11 +215,16 @@ class DatabaseClient {
 
             const oldVersions = await this.connection.allDocs({ keys: _ids, include_docs: true });
 
+            const oldVersionsMapped = oldVersions.rows.reduce((acc, row) => {
+                acc[row.id]= !!row.value ? row.value.rev : undefined;
+                return acc;
+            }, {})
+
             const docs = _ids.map((id, i) => {
                 return {
                     ...pruneOpenDSUFields(documents[i]),
                     [DBKeys.PK]: id,
-                    [DBKeys.REV]: oldVersions[i].doc._rev,
+                    [DBKeys.REV]: oldVersionsMapped[id] || null,
                     [DBKeys.TIMESTAMP]: documents[i][DBKeys.TIMESTAMP] || Date.now()
                 };
             })
