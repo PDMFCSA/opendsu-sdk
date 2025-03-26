@@ -420,9 +420,9 @@ module.exports = function (server) {
                 //executing the request
                 debug(`Executing task. making local request to ${url}`, JSON.stringify(task));
 
-                const result = await new Promise((resolve, reject) => {
+                // const result = await new Promise((resolve, reject) => {
                     
-                })))
+                // })))
             }
             logger.info("Executing task for url", task.url);
             const fixedUrl = task.url;
