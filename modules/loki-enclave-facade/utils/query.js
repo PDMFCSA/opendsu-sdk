@@ -119,9 +119,16 @@ function buildCondition(field, operator, value) {
     }
 
     const fieldName = DSUKeysToDBMapping[field] || field;
+    if(fieldName == "timestamp" || fieldName == "version"){
+        return {
+            [fieldName]: {
+                [mangoOperator]: parseValue(value)
+            }
+        };
+    }
     return {
         [fieldName]: {
-            [mangoOperator]: parseValue(value)
+            [mangoOperator]: value
         }
     };
 }
