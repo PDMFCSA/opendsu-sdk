@@ -133,17 +133,23 @@ module.exports = function (server) {
     };
 
     function createBulkPK(urls){
-        let base = urls[0];
-        let isObject = typeof base === 'object' && base !== null
+        try {
+            let base = urls[0];
+            let isObject = typeof base === 'object' && base !== null
+    
+            base = isObject ? base.url.split("?")[0] : base.split("?")[0];
+    
+            const langs = urls.map(url => (typeof url === 'object' && url !== null) ? new URLSearchParams(url.url.split("?")[1]).get("lang") : new URLSearchParams(url.split("?")[1]).get("lang"))
+            let params = new URLSearchParams(isObject ? urls[0].url.split("?")[1] : urls[0].split("?")[1]);
+    
+    
+            params.set("lang", [...new Set(langs)].sort().join("-"));
+    
+            return `${base}?${params.toString()}`;
+        } catch (e) {
+            throw e
+        }
 
-        base = isObject ? base.url.split("?")[0] : base.split("?")[0];
-
-        const langs = urls.map(url => isObject ? new URLSearchParams(url.url.split("?")[1]).get("lang") : new URLSearchParams(url.split("?")[1]).get("lang")).join("-");
-        let params = new URLSearchParams(isObject ? urls[0].url.split("?")[1] : urls[0].split("?")[1]);
-
-        params.set("lang", langs);
-
-        return `${base}?${params.toString()}`;
     }
 
     function remap(obj){
