@@ -369,7 +369,6 @@ module.exports = function (server) {
                     debug("Error filtering history table", err);
                     return callback(err);
                 }
-
                 taskRegistry.add(records, function (err) {
                     if (err) {
                         return callback(err);
@@ -453,7 +452,6 @@ module.exports = function (server) {
     };
     const taskRunner = {
         doItNow: async function (tasks) {
-
             if (!Array.isArray(tasks)){
                 tasks = [tasks]
             }
@@ -572,102 +570,7 @@ module.exports = function (server) {
             }
 
             taskRegistry.markAsDone(tasks.url || tasks._id);
-
-            logger.info("Executing task for url", task.url);
-            const fixedUrl = task.url;
-            //we need to do the request and save the result into the cache
-            let urlBase = `http://127.0.0.1`;
-            let url = urlBase;
-            if (!fixedUrl.startsWith("/")) {
-                url += "/";
-            }
-            url += fixedUrl;
-
-            // DO everything
-
-
-            //let's create an url object from our string
-            let converter = new URL(url);
-            //we inject the request identifier
-            converter.searchParams.append(TAG_FIXED_URL_REQUEST, "true");
-            //this new url will contain our flag that prevents resolving in our middleware
-            url = converter.toString().replace(urlBase, "");
-
-            //executing the request
-            debug(`Executing task. making local request to ${url}`, JSON.stringify(task));
-            server.makeLocalRequest("GET", url, "", {}, function (error, result) {
-                const end = Date.now();
-                if (error) {
-                    logger.error("caught an error during fetching fixedUrl", error.message, error.code, error);
-                    if (error.httpCode && error.httpCode > 300) {
-                        //missing data
-                        taskRunner.resolvePendingReq(task.url, "", error.httpCode);
-                        logger.debug("Cleaning url because of the resolving error", error);
-                        indexer.clean(task.url, (err) => {
-                            if (err) {
-                                if (err.code !== "ENOENT") {
-                                    logger.error("Failed to clean url", err);
-                                }
-                            }
-                        });
-                        return taskRegistry.markAsDone(task.url, (err) => {
-                            if (err) {
-                                logger.log("Failed to remove a task that we weren't able to resolve", err);
-                                return;
-                            }
-                        });
-                    }
-                    return taskRegistry.markAsDone(task.url, (err) => {
-                        if (err) {
-                            logger.log("Failed to remove a task that we weren't able to resolve", err);
-                            return;
-                        }
-                        //if failed we add the task back to the end of the queue...
-                        setTimeout(() => {
-                            debug("Rescheduling the task", task.url);
-                            taskRegistry.add(task.url, (err) => {
-                                if (err) {
-                                    logger.log("Failed to reschedule the task", task.url, err.message, err.code, err);
-                                }
-                            });
-                        }, 100);
-                    })
-                }
-                //got result... we need to store it for future requests, and we need to resolve any pending request waiting for it
-                if (result) {
-                    //let's resolve as fast as possible any pending request for the current task
-                    taskRunner.resolvePendingReq(task.url, result);
-
-                    if (!taskRegistry.isInProgress(task.url)) {
-                        logger.info("Looks that somebody canceled the task before we were able to resolve.");
-                        //if somebody canceled the task before we finished the request we stop!
-                        return;
-                    }
-
-                    debug(`Persisting ${task.url}`)
-                    indexer.persist(task.url, result, function (err) {
-                        if (err) {
-                            logger.error("Not able to persist fixed url", task, err);
-                        }
-
-                        taskRegistry.markAsDone(task.url, (err) => {
-                            if (err) {
-                                logger.warn("Failed to mark request as done in lightDBEnclaveClient", task, err);
-                            }
-                        });
-
-                        //let's test if we have other tasks that need to be executed...
-                        taskRunner.execute();
-                    });
-                } else {
-                    taskRegistry.markAsDone(task.url, (err) => {
-                        if (err) {
-                            logger.warn("Failed to mark request as done in lightDBEnclaveClient", task, err);
-                        }
-                        taskRunner.resolvePendingReq(task.url, result, 204);
-                    });
-                }
-            });
+            taskRegistry.execute();
         },
         execute: function () {
             taskRegistry.getOneTask(function (err, task) {

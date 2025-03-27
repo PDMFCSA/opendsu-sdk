@@ -221,12 +221,16 @@ class DatabaseClient {
             }, {})
 
             const docs = _ids.map((id, i) => {
-                return {
+                const result = {
                     ...pruneOpenDSUFields(documents[i]),
                     [DBKeys.PK]: id,
-                    [DBKeys.REV]: oldVersionsMapped[id] || null,
                     [DBKeys.TIMESTAMP]: documents[i][DBKeys.TIMESTAMP] || Date.now()
-                };
+                }
+
+                if(oldVersionsMapped[id])
+                    result[DBKeys.REV] = oldVersionsMapped[id]
+
+                return result;
             })
 
             const responses = await this.connection.bulk({ docs: docs });
