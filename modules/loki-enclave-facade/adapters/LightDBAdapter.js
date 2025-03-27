@@ -320,6 +320,15 @@ function LightDBAdapter(config) {
             dbName = forDid;
             forDid = undefined;
         }
+        if (typeof callback !== "function"){
+            callback = max;
+            max = 250;
+        }
+
+        if (typeof callback !== "function"){
+            callback = sort;
+            sort = "asc";
+        }
 
         dbName = getDbName(dbName);
         dbName = dbService.changeDBNameToLowerCaseAndValidate(dbName);
@@ -357,9 +366,15 @@ function LightDBAdapter(config) {
 
             const newSort = [{[sortingField]: sort || SortOrder.ASC}];
             dbService.filter(dbName, filterConditions, newSort, max)
-                .then((response) => callback(undefined, response))
-                .catch((e) => callback(createOpenDSUErrorWrapper(`Filter operation failed on ${dbName}`, e)));
-        }).catch((e) => callback(createOpenDSUErrorWrapper(`open operation failed on ${dbName}`, e)))
+                .then((response) => {
+                    callback(undefined, response)
+                })
+                .catch((e) => {
+                    callback(createOpenDSUErrorWrapper(`Filter operation failed on ${dbName}`, e))
+                });
+        }).catch((e) => {
+            callback(createOpenDSUErrorWrapper(`open operation failed on ${dbName}`, e))
+        })
     }
 
     /**

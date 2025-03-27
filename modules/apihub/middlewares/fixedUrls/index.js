@@ -22,7 +22,8 @@ module.exports = function (server) {
 
     const workingDir = path.join(server.rootFolder, "external-volume", "fixed-urls");
     const storage = path.join(workingDir, "..", "lightDB", "FixedUrls.db", "database");
-    let lightDBEnclaveClient = require("loki-enclave-facade").createCouchDBEnclaveFacadeInstance(storage);
+    const {remapObject, createCouchDBEnclaveFacadeInstance} = require("loki-enclave-facade");
+    let lightDBEnclaveClient = createCouchDBEnclaveFacadeInstance(storage);
     // let lightDBEnclaveClient = enclaveAPI.initialiseLightDBEnclave(DATABASE);
 
     let watchedUrls = [];
@@ -132,49 +133,36 @@ module.exports = function (server) {
     };
 
     function createBulkPK(urls){
-        
-        const url = urls.reduce((acc, url, i) => {
-            const params = url.searchParams;
+        const base = urls[0].split("?")[0];
+        const langs = urls.map(url => new URLSearchParams(url.split("?")[1]).get("lang")).join("-");
+        let params = new URLSearchParams(urls[0].split("?")[1]);
 
-            if(i === 0){
-                const payload ={
-                    gtin: params.get("gtin"),
-                    batch: params.get("batch"),
-                    leaflet_type: params.get("leaflet_type"),
-                    epiMarket: params.get("epiMarket"),
-                }
+        params.set("lang", langs);
 
-                let original = acc.set;
-                acc.set = function (key, value) {
-                    if(!value)
-                        return
-    
-                    return original.call(params, key, value)
-                }
-               
-
-                acc.set("gtin", payload.gtin);
-                acc.set("batch", payload.batch)
-                acc.set("leaflet_type", payload.leaflet_type)
-                acc.set("epiMarket", payload.epiMarket)
-            }
-
-            acc.set("lang", [...acc.get("lang").split("-"), params.get("lang")].join("-"));
-
-            return acc;
-        }, new URL(`${urls[0].origin}${urls[0].pathname}`));
-
-        url.searchParams.sort();
-
-        return url;
+        return `${base}?${params.toString()}`;
     }
+
+    function remap(obj){
+        return Object.keys(obj).reduce((acc, key) => {
+            if (key.startsWith("__"))
+                key = key.substring(2);
+            acc[key] = obj[key];
+            return acc;
+        }, {})            }
 
     const taskRegistry = {
         inProgress: {},
         createModel: function (fixedUrl) {
-            // if (!Array.isArray(fixedUrl))
-            //     return {url: fixedUrl, pk: getIdentifier(fixedUrl)};
-            return fixedUrl.map(url => ({url: url, pk: getIdentifier(url)}));
+
+            function map(url){
+                if (typeof url == "string")
+                    return {url: url, pk: getIdentifier(url)}
+                return {url: url.url, pk: getIdentifier(url.url)};
+            }
+
+            if (!Array.isArray(fixedUrl))
+                return map(fixedUrl);
+            return fixedUrl.map(map);
         },
         register: async function (task, callback) {
             let newRecord = taskRegistry.createModel(task);
@@ -214,10 +202,9 @@ module.exports = function (server) {
             debug("Adding task to tasks table", JSON.stringify(newRecord));
 
             const pk = createBulkPK(task)
-
-
             lightDBEnclaveClient.getRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, pk, function (err, record) {
                 if (err || !record) {
+                    newRecord = newRecord.map(remap)
                     debug("Task not found in tasks table, adding it", JSON.stringify(newRecord));
                     return lightDBEnclaveClient.insertRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, pk, newRecord, (insertError)=>{
                         //if we fail... could be that the task is ready register by another request due to concurrency
@@ -259,7 +246,9 @@ module.exports = function (server) {
           })
         },
         remove: function (task, callback) {
+
             let toBeRemoved = taskRegistry.createModel(task);
+            const pk = createBulkPK(task)
             debug("Checking existence of task from tasks table before deleting", JSON.stringify(toBeRemoved));
             lightDBEnclaveClient.getRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, toBeRemoved.pk, function (err, record) {
                 if (err || !record) {

@@ -4,7 +4,7 @@ const CouchDBEnclaveFacade = require("./CouchDBEnclaveFacade");
 const LightDBAdapter = require("./adapters/LightDBAdapter");
 const CouchDBServer = require("./CouchDBServer");
 const {DBService} = require("./services/DBService");
-
+const {remapObject} = require("./utils");
 const createLokiEnclaveFacadeInstance = (storage, autoSaveInterval, adaptorConstructorFunction) => {
     return new LokiEnclaveFacade(storage, autoSaveInterval, adaptorConstructorFunction);
     // return createCouchDBEnclaveFacadeInstance(storage, autoSaveInterval, adaptorConstructorFunction);
@@ -26,6 +26,7 @@ const createCouchDBServerInstance = (config, callback) => {
 module.exports = {
     DBService,
     LightDBAdapter,
+    remapObject,
     createLokiEnclaveFacadeInstance,
     createLightDBServerInstance,
     createCouchDBEnclaveFacadeInstance,
