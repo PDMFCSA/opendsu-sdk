@@ -21,9 +21,9 @@ module.exports = function (server) {
     }
 
     const workingDir = path.join(server.rootFolder, "external-volume", "fixed-urls");
-    const storage = path.join(workingDir, "..", "lightDB", "FixedUrls.db", "database");
-    const {remapObject, createCouchDBEnclaveFacadeInstance} = require("loki-enclave-facade");
-    let lightDBEnclaveClient = createCouchDBEnclaveFacadeInstance(storage);
+    const storage = path.join(workingDir, "storage");
+    const database = path.join(workingDir, "..", "lightDB", "FixedUrls.db", "database");
+    let lightDBEnclaveClient = require("loki-enclave-facade").createCouchDBEnclaveFacadeInstance(database);
     // let lightDBEnclaveClient = enclaveAPI.initialiseLightDBEnclave(DATABASE);
 
     let watchedUrls = [];
