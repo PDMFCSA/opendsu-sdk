@@ -133,9 +133,13 @@ module.exports = function (server) {
     };
 
     function createBulkPK(urls){
-        const base = urls[0].split("?")[0];
-        const langs = urls.map(url => new URLSearchParams(url.split("?")[1]).get("lang")).join("-");
-        let params = new URLSearchParams(urls[0].split("?")[1]);
+        let base = urls[0];
+        let isObject = typeof base === 'object' && base !== null
+
+        base = isObject ? base.url.split("?")[0] : base.split("?")[0];
+
+        const langs = urls.map(url => isObject ? new URLSearchParams(url.url.split("?")[1]).get("lang") : new URLSearchParams(url.split("?")[1]).get("lang")).join("-");
+        let params = new URLSearchParams(isObject ? urls[0].url.split("?")[1] : urls[0].split("?")[1]);
 
         params.set("lang", langs);
 
