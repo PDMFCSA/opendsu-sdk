@@ -159,7 +159,6 @@ function CouchDBEnclaveFacade(rootFolder, autosaveInterval, adaptorConstructorFu
 
 
     this.insertMany = async function (dbName, ids, records) {
-
         try {
             await this.storageDB.insertMany(dbName, ids, records);
         } catch (e) {

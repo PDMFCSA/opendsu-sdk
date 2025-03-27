@@ -93,6 +93,16 @@ module.exports = function (server) {
             logger.debug("Persisting url", fixedUrl);
             fs.writeFile(indexer.getFileName(fixedUrl), content, callback);
         },
+        persistAsync: async function (fixedUrl, content) {
+            return new Promise((resolve, reject) => {
+                indexer.persist(fixedUrl, content, (err, ...args) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    resolve(...args);
+                });
+            })
+        },
         get: function (fixedUrl, callback) {
             logger.debug("Reading url", fixedUrl);
             fs.readFile(indexer.getFileName(fixedUrl), callback);
@@ -100,6 +110,15 @@ module.exports = function (server) {
         clean: function (fixedUrl, callback) {
             logger.debug("Cleaning url", fixedUrl);
             fs.unlink(indexer.getFileName(fixedUrl), callback);
+        },
+        cleanAsync: function (fixedUrl) {
+            return new Promise((resolve, reject) => {
+                return indexer.clean(fixedUrl, (err, ...args) => {
+                    if (err)
+                        return reject(err);
+                    resolve(...args);
+                })
+            })
         },
         getTimestamp: function (fixedUrl, callback) {
             logger.debug("Reading timestamp for", fixedUrl);
@@ -172,9 +191,9 @@ module.exports = function (server) {
             // }
             // bulk mode
 
-            const ids = newRecord.map(r => r.id)
+            const ids = newRecord.map(r => r.pk)
             try {
-                await lightDBEnclaveClient.updateMany(HISTORY_TABLE, ids, newRecord);
+                await lightDBEnclaveClient.storageDB.updateMany(HISTORY_TABLE, ids, newRecord);
             } catch (e){
                 debug("Error registering tasks in tasks table", e);
                 return callback(e);
@@ -231,6 +250,14 @@ module.exports = function (server) {
                 return lightDBEnclaveClient.updateRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, pk, record, callback);
             });
         },
+        addAsync: async function (task) {
+          return new Promise((resolve, reject) => {
+              taskRegistry.add(task, err => {
+                  if(err) return reject(err)
+                  resolve()
+              })
+          })
+        },
         remove: function (task, callback) {
             let toBeRemoved = taskRegistry.createModel(task);
             debug("Checking existence of task from tasks table before deleting", JSON.stringify(toBeRemoved));
@@ -269,14 +296,17 @@ module.exports = function (server) {
                     debug("No tasks found in tasks table, waiting for new tasks");
                     return callback(undefined);
                 }
-                if (taskRegistry.inProgress[task.url]) {
-                    logger.debug(`${task.url} is in progress.`);
+
+                const url = task.url || task._id
+
+                if (taskRegistry.inProgress[url]) {
+                    logger.debug(`${url} is in progress.`);
                     //we already have this task in progress, we need to wait
                     return callback(undefined);
                 }
-                taskRegistry.markInProgress(task.url);
+                taskRegistry.markInProgress(url);
                 const end = Date.now();
-                debug(`Task ${task.url} picked for processing. Took ${end - task.timestamp}ms.`);
+                debug(`Task ${url} picked for processing. Took ${end - task.timestamp}ms.`);
                 callback(undefined, task);
             });
         },
@@ -303,6 +333,15 @@ module.exports = function (server) {
             taskRegistry.inProgress[task] = undefined;
             delete taskRegistry.inProgress[task];
             taskRegistry.remove(task, callback);
+        },
+        markAsDoneAsync: async function (task) {
+          return new Promise((resolve, reject) => {
+              taskRegistry.markAsDone(task, (err) => {
+                  if(err)
+                    return reject(err);
+                  resolve();
+              });
+            });
         },
         isKnown: function (task, callback) {
             let target = taskRegistry.createModel(task);
@@ -418,6 +457,8 @@ module.exports = function (server) {
             if (!Array.isArray(tasks)){
                 tasks = [tasks]
             }
+            let results = {task: [], content: []};
+            let failures = []
 
             for (let task of tasks){
                 logger.info("Executing task for url", task.url);
@@ -440,10 +481,98 @@ module.exports = function (server) {
                 //executing the request
                 debug(`Executing task. making local request to ${url}`, JSON.stringify(task));
 
-                const result = await new Promise((resolve, reject) => {
-                    
-                })
+
+                try {
+                    const result = await new Promise((resolve, reject) => {
+                        server.makeLocalRequest("GET", url, "", {}, function (error, result) {
+                            if (error) {
+                                return reject(error);
+                            }
+                            resolve(result);
+                        })
+                    })
+                    results.push({url: task.url, content: result});
+                } catch (error) {
+                    failures.push({url: task.url, error: error});
+                }
             }
+
+            const successes = new Promise(async (resolve) => {
+                for (const result of results) {
+                    if (!taskRegistry.isInProgress(tasks.url)) {
+                        logger.info("Looks that somebody canceled the task before we were able to resolve.");
+                        //if somebody canceled the task before we finished the request we stop!
+                        return resolve();
+                    }
+
+                    if (result.content) {
+                        //let's resolve as fast as possible any pending request for the current task
+                        taskRunner.resolvePendingReq(result.url, result.content);
+
+                        if (!taskRegistry.isInProgress(result.url)) {
+                            logger.info("Looks that somebody canceled the task before we were able to resolve.");
+                            //if somebody canceled the task before we finished the request we stop!
+                            return;
+                        }
+
+                        debug(`Persisting ${result.url}`)
+                        try {
+                            await indexer.persistAsync(result.url, result.content)
+                        } catch (e) {
+                            logger.error("Not able to persist fixed url", result.url, e);
+                        }
+                        resolve();
+                    } else {
+                        taskRunner.resolvePendingReq(result.url, result.content, 204);
+                    }
+                    try {
+                        await taskRegistry.markAsDoneAsync(result.url)
+                    } catch (err) {
+                        logger.warn("Failed to mark request as done in lightDBEnclaveClient", result, err);
+                    }
+                    resolve();
+                }
+            })
+            const fails = new Promise(async (resolve) => {
+                for (const failure of failures) {
+                    const {url, error} = failure;
+                    logger.error(`caught an error during fetching fixedUrl ${url}`, error.message, error.code, error);
+                    if (error.httpCode && error.httpCode > 300) {
+                        //missing data
+                        taskRunner.resolvePendingReq(url, "", error.httpCode);
+                        logger.debug("Cleaning url because of the resolving error", error);
+                        try {
+                            await indexer.cleanAsync(url);
+                            await taskRegistry.markAsDoneAsync(url)
+                        } catch (e) {
+                            if (e.code !== "ENOENT")
+                                logger.error("Failed to clean url", e);
+                            else
+                                logger.debug("Failed to remove a task that we weren't able to resolve", e);
+                        }
+                        //if failed we add the task back to the end of the queue...
+                        setTimeout(async () => {
+                            debug("Rescheduling the task", url);
+                            try {
+                                await taskRegistry.addAsync(url)
+                            } catch (err) {
+                                logger.log("Failed to reschedule the task", url, err.message, err.code, err);
+                            }
+                        }, 100);
+                        resolve();
+                    }
+                }
+            })
+
+            try {
+                await successes;
+                await fails;
+            } catch (err) {
+                logger.error("Failed to execute all tasks", err);
+            }
+
+            taskRegistry.markAsDone(tasks.url || tasks._id);
+
             logger.info("Executing task for url", task.url);
             const fixedUrl = task.url;
             //we need to do the request and save the result into the cache
