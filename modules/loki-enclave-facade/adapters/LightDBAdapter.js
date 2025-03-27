@@ -401,6 +401,11 @@ function LightDBAdapter(config) {
                 if (!response.length) {
                     return callback();
                 }
+
+                if (!response[0].url) {
+                    return callback(undefined, Object.keys(response[0]).filter(k => !isNaN(parseInt(k))).map(k => response[0][k]), response[0].pk);
+                }
+
                 callback(undefined, response[0])
             })
             .catch((e) => callback(createOpenDSUErrorWrapper(`Failed to fetch record from ${dbName}`, e)));

@@ -286,7 +286,7 @@ module.exports = function (server) {
         },
         getOneTask: function (callback) {
             debug("Getting one task from tasks table");
-            lightDBEnclaveClient.getOneRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, function (err, task) {
+            lightDBEnclaveClient.getOneRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, function (err, task, masterPk) {
                 if (err) {
                     debug("Error getting task from tasks table", err);
                     return callback(err);
@@ -298,8 +298,7 @@ module.exports = function (server) {
                 let url = task.url
 
                 if (!task.url && typeof task === "object"){ // we received an array like object
-                    const tasks = Object.keys(task).map(key => task[key]);
-                    url = createBulkPK(tasks);
+                    url = masterPk
                 }
 
                 if (taskRegistry.inProgress[url]) {
@@ -310,7 +309,7 @@ module.exports = function (server) {
                 taskRegistry.markInProgress(url);
                 const end = Date.now();
                 debug(`Task ${url} picked for processing. Took ${end - task.timestamp}ms.`);
-                callback(undefined, task);
+                callback(undefined, task, masterPk);
             });
         },
         isInProgress: function (task) {
@@ -454,11 +453,11 @@ module.exports = function (server) {
         }
     };
     const taskRunner = {
-        doItNow: async function (tasks) {
+        doItNow: async function (tasks, masterPk) {
             if (!Array.isArray(tasks)){
                 tasks = [tasks]
             }
-            let results = {task: [], content: []};
+            let results = []
             let failures = []
 
             for (let task of tasks){
@@ -500,7 +499,7 @@ module.exports = function (server) {
 
             const successes = new Promise(async (resolve) => {
                 for (const result of results) {
-                    if (!taskRegistry.isInProgress(tasks.url)) {
+                    if (!taskRegistry.isInProgress(masterPk || tasks.url)) {
                         logger.info("Looks that somebody canceled the task before we were able to resolve.");
                         //if somebody canceled the task before we finished the request we stop!
                         return resolve();
@@ -510,7 +509,7 @@ module.exports = function (server) {
                         //let's resolve as fast as possible any pending request for the current task
                         taskRunner.resolvePendingReq(result.url, result.content);
 
-                        if (!taskRegistry.isInProgress(result.url)) {
+                        if (!taskRegistry.isInProgress(masterPk || result.url)) {
                             logger.info("Looks that somebody canceled the task before we were able to resolve.");
                             //if somebody canceled the task before we finished the request we stop!
                             return;
@@ -527,7 +526,7 @@ module.exports = function (server) {
                         taskRunner.resolvePendingReq(result.url, result.content, 204);
                     }
                     try {
-                        await taskRegistry.markAsDoneAsync(result.url)
+                        await taskRegistry.markAsDoneAsync(masterPk || result.url)
                     } catch (err) {
                         logger.warn("Failed to mark request as done in lightDBEnclaveClient", result, err);
                     }
@@ -572,16 +571,16 @@ module.exports = function (server) {
                 logger.error("Failed to execute all tasks", err);
             }
 
-            taskRegistry.markAsDone(tasks.url || tasks._id);
+            taskRegistry.markAsDone(masterPk);
             taskRegistry.execute();
         },
         execute: function () {
-            taskRegistry.getOneTask(function (err, task) {
+            taskRegistry.getOneTask(function (err, task, masterPk) {
                 if (err || !task) {
                     return;
                 }
 
-                taskRunner.doItNow(task);
+                taskRunner.doItNow(task, masterPk);
             })
         },
         pendingRequests: {},
