@@ -275,11 +275,11 @@ module.exports = function (server) {
                     record.counter = 1;
                     record.__fallbackToInsert = true;
                     debug("found record to delete from table tasks. updating instead", JSON.stringify(record));
-                    return lightDBEnclaveClient.updateRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, toBeRemoved.pk, record, callback);
+                    return lightDBEnclaveClient.updateRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, pk, record, callback);
                 }
 
                 debug("found record to delete from table tasks. updating instead", JSON.stringify(record));
-                lightDBEnclaveClient.deleteRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, toBeRemoved.pk, err => {
+                lightDBEnclaveClient.deleteRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, pk, err => {
                     if (err) {
                         debug("Error deleting task from tasks table", err);
                         return callback(err);
