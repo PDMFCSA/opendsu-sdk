@@ -204,6 +204,30 @@ function LightDBAdapter(config) {
             .catch((e) => callback(e, undefined));
     };
 
+    this.insertMany = async function (dbName, ids, records) {
+        dbName = getDbName(dbName);
+        dbName = dbService.changeDBNameToLowerCaseAndValidate(dbName);
+
+        try {
+            await dbService.insertMany(dbName, ids, records);
+        } catch (e) {
+            logger.error(`Failed to insert records into ${dbName}: ${e}`);
+            throw e
+        }
+    }
+
+    this.updateMany = async function (dbName, ids, records) {
+        dbName = getDbName(dbName);
+        dbName = dbService.changeDBNameToLowerCaseAndValidate(dbName);
+
+        try {
+            await dbService.updateMany(dbName, ids, records);
+        } catch (e) {
+            logger.error(`Failed to insert records into ${dbName}: ${e}`);
+            throw e
+        }
+    }
+
     /**
      * Get a record from the specified table.
      *
@@ -296,6 +320,15 @@ function LightDBAdapter(config) {
             dbName = forDid;
             forDid = undefined;
         }
+        if (typeof callback !== "function"){
+            callback = max;
+            max = 250;
+        }
+
+        if (typeof callback !== "function"){
+            callback = sort;
+            sort = "asc";
+        }
 
         dbName = getDbName(dbName);
         dbName = dbService.changeDBNameToLowerCaseAndValidate(dbName);
@@ -333,9 +366,15 @@ function LightDBAdapter(config) {
 
             const newSort = [{[sortingField]: sort || SortOrder.ASC}];
             dbService.filter(dbName, filterConditions, newSort, max)
-                .then((response) => callback(undefined, response))
-                .catch((e) => callback(createOpenDSUErrorWrapper(`Filter operation failed on ${dbName}`, e)));
-        }).catch((e) => callback(createOpenDSUErrorWrapper(`open operation failed on ${dbName}`, e)))
+                .then((response) => {
+                    callback(undefined, response)
+                })
+                .catch((e) => {
+                    callback(createOpenDSUErrorWrapper(`Filter operation failed on ${dbName}`, e))
+                });
+        }).catch((e) => {
+            callback(createOpenDSUErrorWrapper(`open operation failed on ${dbName}`, e))
+        })
     }
 
     /**
@@ -362,6 +401,11 @@ function LightDBAdapter(config) {
                 if (!response.length) {
                     return callback();
                 }
+
+                if (!response[0].url) {
+                    return callback(undefined, Object.keys(response[0]).filter(k => !isNaN(parseInt(k))).map(k => response[0][k]), response[0].pk);
+                }
+
                 callback(undefined, response[0])
             })
             .catch((e) => callback(createOpenDSUErrorWrapper(`Failed to fetch record from ${dbName}`, e)));
