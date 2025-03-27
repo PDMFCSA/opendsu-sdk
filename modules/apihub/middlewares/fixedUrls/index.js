@@ -134,6 +134,7 @@ module.exports = function (server) {
 
     function createBulkPK(urls){
         try {
+            urls = Array.isArray(urls)? urls : [urls];
             let base = urls[0];
             let isObject = typeof base === 'object' && base !== null
     
@@ -189,8 +190,9 @@ module.exports = function (server) {
             // }
             // bulk mode
 
-            const ids = newRecord.map(r => r.pk)
             try {
+                newRecord = Array.isArray(newRecord)? newRecord : [newRecord];
+                const ids = newRecord.map(r => r.pk)
                 await lightDBEnclaveClient.storageDB.updateMany(HISTORY_TABLE, ids, newRecord);
             } catch (e){
                 debug("Error registering tasks in tasks table", e);
