@@ -289,8 +289,12 @@ module.exports = function (server) {
                     debug("No tasks found in tasks table, waiting for new tasks");
                     return callback(undefined);
                 }
+                let url = task.url
 
-                const url = task.url || task._id
+                if (!task.url && typeof task === "object"){ // we received an array like object
+                    const tasks = Object.keys(task).map(key => task[key]);
+                    url = createBulkPK(tasks);
+                }
 
                 if (taskRegistry.inProgress[url]) {
                     logger.debug(`${url} is in progress.`);
@@ -452,8 +456,8 @@ module.exports = function (server) {
             let failures = []
 
             for (let task of tasks){
-                logger.info("Executing task for url", task.url);
-                const fixedUrl = task.url;
+                logger.info("Executing task for url", task.url || task);
+                const fixedUrl = task.url || task;
                 //we need to do the request and save the result into the cache
                 let urlBase = `http://127.0.0.1`;
                 let url = urlBase;
