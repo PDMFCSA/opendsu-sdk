@@ -338,9 +338,13 @@ module.exports = function (server) {
         },
         markAsDone: function (task, callback) {
             logger.debug(`Marking task ${task} as done`);
-            taskRegistry.inProgress[task] = undefined;
-            delete taskRegistry.inProgress[task];
-            taskRegistry.remove(task, callback);
+            taskRegistry.remove(task, (err) => {
+                if(err)
+                    return callback(err);
+                taskRegistry.inProgress[task] = undefined;
+                delete taskRegistry.inProgress[task];
+                callback()
+            })
         },
         markAsDoneAsync: async function (task) {
           return new Promise((resolve, reject) => {
@@ -581,7 +585,7 @@ module.exports = function (server) {
             } catch (e){
                 logger.error(`Failed to mark task ${masterPk} as done`, e);
             }
-            taskRegistry.execute();
+            taskRunner.execute();
         },
         execute: function () {
             taskRegistry.getOneTask(function (err, task, masterPk) {
