@@ -256,11 +256,17 @@ module.exports = function (server) {
           })
         },
         remove: function (task, callback) {
+            let pk, toBeRemoved;
+            if (Array.isArray(task)) {
+                toBeRemoved = taskRegistry.createModel(task);
+                pk = createBulkPK(toBeRemoved);
+            } else {
+                pk = typeof task === "string" ? task : task.url;
+                toBeRemoved = taskRegistry.createModel(pk);
+            }
 
-            let toBeRemoved = taskRegistry.createModel(task);
-            const pk = createBulkPK(task)
             debug("Checking existence of task from tasks table before deleting", JSON.stringify(toBeRemoved));
-            lightDBEnclaveClient.getRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, toBeRemoved.pk, function (err, record) {
+            lightDBEnclaveClient.getRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, pk, function (err, record) {
                 if (err || !record) {
                     debug("Task not found in tasks table, ignoring deletion", JSON.stringify(toBeRemoved));
                     return callback(undefined);
@@ -526,7 +532,7 @@ module.exports = function (server) {
                         taskRunner.resolvePendingReq(result.url, result.content, 204);
                     }
                     try {
-                        await taskRegistry.markAsDoneAsync(masterPk || result.url)
+                        await taskRegistry.markAsDoneAsync(result.url)
                     } catch (err) {
                         logger.warn("Failed to mark request as done in lightDBEnclaveClient", result, err);
                     }
@@ -570,8 +576,11 @@ module.exports = function (server) {
             } catch (err) {
                 logger.error("Failed to execute all tasks", err);
             }
-
-            taskRegistry.markAsDone(masterPk);
+            try {
+                await taskRegistry.markAsDoneAsync(masterPk);
+            } catch (e){
+                logger.error(`Failed to mark task ${masterPk} as done`, e);
+            }
             taskRegistry.execute();
         },
         execute: function () {
