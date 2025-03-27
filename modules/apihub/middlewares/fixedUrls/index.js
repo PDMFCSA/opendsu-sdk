@@ -565,9 +565,9 @@ module.exports = function (server) {
                                 logger.log("Failed to reschedule the task", url, err.message, err.code, err);
                             }
                         }, 100);
-                        resolve();
                     }
                 }
+                resolve();
             })
 
             try {
