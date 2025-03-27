@@ -216,7 +216,7 @@ class DatabaseClient {
             const oldVersions = await this.connection.fetch({ keys: _ids });
 
             const oldVersionsMapped = oldVersions.rows.reduce((acc, row) => {
-                acc[row.id]= !!row.value ? row.value.rev : undefined;
+                acc[row.key]= !!row.value ? row.value.rev : undefined;
                 return acc;
             }, {})
 
