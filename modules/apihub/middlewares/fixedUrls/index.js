@@ -216,7 +216,7 @@ module.exports = function (server) {
             const pk = createBulkPK(task)
             lightDBEnclaveClient.getRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, pk, function (err, record) {
                 if (err || !record) {
-                    newRecord = newRecord.map(remap)
+                    newRecord =  Array.isArray(newRecord) ? newRecord.map(remap) : [newRecord].map(remap);
                     debug("Task not found in tasks table, adding it", JSON.stringify(newRecord));
                     return lightDBEnclaveClient.insertRecord($$.SYSTEM_IDENTIFIER, TASKS_TABLE, pk, newRecord, (insertError)=>{
                         //if we fail... could be that the task is ready register by another request due to concurrency
