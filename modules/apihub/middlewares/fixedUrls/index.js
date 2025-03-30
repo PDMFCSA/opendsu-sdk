@@ -510,7 +510,7 @@ module.exports = function (server) {
             if (err) {
                 logger.error("Failed to ensure folder structure due to", err);
             }
-            lightDBEnclaveClient.createDatabase(DATABASE, (err) => {
+            lightDBEnclaveClient.createDatabase(undefined, DATABASE, (err) => {
                 if (err) {
                     logger.debug("Failed to create database", err.message, err.code, err.rootCause);
                 }
