@@ -172,6 +172,11 @@
 
             console.log("We are here before: " + dbname + "." + collectionIndex);
             try {
+                let filePath = dbname + "." + collectionIndex;
+                
+                if(!fs.existsSync(filePath))
+                    throw new Error("File not found");
+
                 instream = fs.createReadStream(dbname + "." + collectionIndex);
                 outstream = new stream();
                 rl = readline.createInterface(instream, outstream);
