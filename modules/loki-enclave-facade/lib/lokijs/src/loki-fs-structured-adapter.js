@@ -170,6 +170,7 @@
             let outstream = null;
             let rl = null;
 
+            console.log("We are here before: " + dbname + "." + collectionIndex);
             try {
                 instream = fs.createReadStream(dbname + "." + collectionIndex);
                 outstream = new stream();
@@ -180,7 +181,9 @@
                 outstream = new stream();
                 rl = readline.createInterface(instream, outstream);
             }
-            
+
+            console.log("We are here after: " + dbname + "." + collectionIndex);
+
             let self = this,
                 obj;
 
