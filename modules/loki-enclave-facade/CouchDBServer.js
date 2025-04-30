@@ -3,6 +3,7 @@ const path = require("path");
 const logger = $$.getLogger("CouchDBServer", "CouchDBEnclaveFacade");
 const DATABASE = "database";
 const getEnclaveKey = (name) => `enclave_${name}`.replaceAll(".", "_");
+const log = require("./utils/logger").conditionalLog;
 
 process.on('uncaughtException', err => {
     logger.critical('There was an uncaught error', err, err.message, err.stack);
@@ -36,19 +37,25 @@ function CouchDBServer(config, callback) {
     //     secret: config.db.secret
     // });
 
-
+    log(logger, `CouchDBServer Initializing with storage: ${lightDBStorage}`);
     const enclaves = {};
     // const clonedEnclaves = {};
     const fs = require("fs");
     fs.accessSync(lightDBStorage);
     const folderContent = fs.readdirSync(lightDBStorage, {withFileTypes: true});
+    log(logger, `CouchDBServer found ${folderContent.length} folders in ${lightDBStorage}`);
+    log(logger, `CouchDBServer found ${folderContent.map(entry => entry.name + ":" + entry.isDirectory()).join(", ")} in ${lightDBStorage}`);
     const promises = folderContent
         .filter(entry => entry.isDirectory())
         .map(entry => {
             return new Promise((resolve, reject) => {
                 const enclaveName = entry.name;
-                const enclaveKey = getEnclaveKey(enclaveName);
-                enclaves[enclaveName] = LokiEnclaveFacade.createCouchDBEnclaveFacadeInstance(path.join(lightDBStorage, enclaveName, DATABASE));
+                log(logger, `CouchDBServer found folder ${enclaveName} in ${lightDBStorage}`);
+                // const enclaveKey = getEnclaveKey(enclaveName);
+                const rootFolder = path.join(lightDBStorage, enclaveName, DATABASE);
+                log(logger, `CouchDBServer using root folder folder ${rootFolder} to create CouchDBEnclaveFacadeInstance`);
+                enclaves[enclaveName] = LokiEnclaveFacade.createCouchDBEnclaveFacadeInstance(rootFolder);
+                log(logger, `CouchDBServer created CouchDBEnclaveFacadeInstance ${enclaveName}`);
                 resolve()
                 // dbAdapter.createCollection(undefined, enclaveKey, [], (err) => {
                 //     if (err) {

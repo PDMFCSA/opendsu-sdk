@@ -1,6 +1,7 @@
 function CouchDBEnclaveFacade(rootFolder, autosaveInterval, adaptorConstructorFunction) {
     const logger = $$.getLogger("CouchDBEnclaveFacade", "CouchDBEnclaveFacade.js");
     const LightDBAdapter = require("./adapters/LightDBAdapter");
+    const log = require("./utils/logger").conditionalLog;
     const openDSU = require("opendsu");
     const aclAPI = require("acl-magic");
     const utils = openDSU.loadAPI("utils");
@@ -8,6 +9,7 @@ function CouchDBEnclaveFacade(rootFolder, autosaveInterval, adaptorConstructorFu
     const EnclaveMixin = openDSU.loadAPI("enclave").EnclaveMixin;
     EnclaveMixin(this);
 
+    log(logger, `CouchDBEnclaveFacade constructor called with rootFolder: ${rootFolder}, autosaveInterval: ${autosaveInterval}, adaptorConstructorFunction: ${adaptorConstructorFunction}`);
     if (typeof rootFolder !== "string") {
         throw new Error("Invalid rootFolder. It must be a string.");
     }
@@ -65,8 +67,9 @@ function CouchDBEnclaveFacade(rootFolder, autosaveInterval, adaptorConstructorFu
     const WRITE_ACCESS = "write";
     const READ_ACCESS = "read";
     const WILDCARD = "*";
+    log(logger, `CouchDBEnclaveFacade Initializing Enclave Persistence`);
     const persistence = aclAPI.createEnclavePersistence(this);
-
+    log(logger, `CouchDBEnclaveFacade Enclave Persistence created`);
     this.grantWriteAccess = (forDID, callback) => {
         persistence.grant(WRITE_ACCESS, WILDCARD, forDID, (err) => {
             if (err) {
@@ -201,8 +204,9 @@ function CouchDBEnclaveFacade(rootFolder, autosaveInterval, adaptorConstructorFu
         return readOnlyFunctions.indexOf(functionName) !== -1;
     }
 
+    log(logger, `CouchDBEnclaveFacade will bind auto pending functions`);
     utils.bindAutoPendingFunctions(this, ["on", "off", "dispatchEvent", "beginBatch", "isInitialised", "getEnclaveType", "getDID", "getUniqueIdAsync"]);
-
+    log(logger, `CouchDBEnclaveFacade bound auto pending functions`);
     // this.storageDB = new LokiDb(rootFolder, autosaveInterval, adaptorConstructorFunction);
 
     let config;
@@ -216,15 +220,21 @@ function CouchDBEnclaveFacade(rootFolder, autosaveInterval, adaptorConstructorFu
     const userName = process.env.DB_USER || config.db.user;
     const secret = process.env.DB_SECRET || config.db.secret;
 
-    this.storageDB = new LightDBAdapter({
+    const adaptorConfig = {
         uri: config.db.uri,
         username: userName,
         secret: secret,
         root: rootFolder,
         readOnlyMode: readOnlyFlag,
         debug: config.db.debug || false
-    }, this);
+    }
+    log(logger, `CouchDBEnclaveFacade will use the following config to initialize the LightDBAdapter(CouchDB): ${JSON.stringify(adaptorConfig)}`);
+    this.storageDB = new LightDBAdapter(adaptorConfig, this);
+    log(logger, `CouchDBEnclaveFacade LightDBAdapter(CouchDB) created`);
+
+    log(logger, `CouchDBEnclaveFacade will start finalizing the initialisation`);
     this.finishInitialisation();
+    log(logger, `CouchDBEnclaveFacade initialisation finished`);
 }
 
 module.exports = CouchDBEnclaveFacade;

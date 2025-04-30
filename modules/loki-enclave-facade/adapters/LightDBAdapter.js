@@ -8,6 +8,8 @@ const {
 } = require("../utils");
 const {DBService} = require("../services");
 const {parseConditionsToDBQuery} = require("../services/utils")
+const log = require("../utils/logger").conditionalLog;
+
 
 /**
  * @param {string} msg - The custom error message.
@@ -33,15 +35,25 @@ function LightDBAdapter(config) {
     const CryptoSkills = w3cDID.CryptographicSkills;
     const baseConfig = config;
 
+    log(logger, `LightDBAdapter constructor called with config: ${JSON.stringify(config)}`);
+
     // const EnclaveMixin = openDSU.loadAPI("enclave").EnclaveMixin;
     // EnclaveMixin(this);
     logger.info(`Initializing CouchDB instance.`);
     if (typeof config.uri === "undefined")
         throw Error("URI was not specified for LightDBAdapter");
-
+    log(logger, `LightDBAdapter creating dbService instance`);
     const dbService = new DBService(config);
+    log(logger, `LightDBAdapter created dbService instance`);
+
+    log(logger, `LightDBAdapter creating Persistence Enclave`);
     const persistence = aclAPI.createEnclavePersistence(this);
+    log(logger, `LightDBAdapter created Persistence Enclave`);
+
+    log(logger, `LightDBAdapter binding auto pending functions`);
     utils.bindAutoPendingFunctions(this);
+    log(logger, `LightDBAdapter bound auto pending functions`);
+
 
     const prefix = config.root.includes("/")
         ? config.root.split("/").slice(config.root.split("/").length -2, config.root.split("/").length -1)[0]
@@ -51,8 +63,10 @@ function LightDBAdapter(config) {
     try {
         const fs = require("fs");
         folderPath = config.root.replace(/\/database\/?$/, '')
-        if(!fs.existsSync(folderPath))
+        if(!fs.existsSync(folderPath)) {
             fs.mkdirSync(folderPath, { recursive: true });
+            logger.info(`Created folder required for CouchDB Server initialization: ${folderPath}`);
+        }
     } catch(e) {
         logger.info(`Failed to create folder ${folderPath}. ${e}`);
     }
@@ -899,6 +913,8 @@ function LightDBAdapter(config) {
 
         return readOnlyFunctions.indexOf(functionName) !== -1;
     }
+
+    log(logger, `LightDBAdapter initialized.`);
 }
 
 LightDBAdapter.prototype.Adapters = {};

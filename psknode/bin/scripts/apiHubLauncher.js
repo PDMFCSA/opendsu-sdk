@@ -11,6 +11,11 @@ const fs = require('fs');
 
 const cluster = require("cluster");
 
+function log(str) {
+    if(process.env.OPENDSU_ENABLE_DEBUG)
+        logger.info(str);
+}
+
 if (cluster.isPrimary) {
     function logMemoryUsage() {
         setInterval(() => {
@@ -100,6 +105,7 @@ async function testAndExecuteMigrations() {
 function launch() {
     const listeningPort = Number.parseInt(config.port);
     const rootFolder = path.resolve(config.storage);
+    log(`Root folder is ${rootFolder} and port is ${listeningPort}`);
 
     function startLightDBInstance(callback) {
         if (!process.env.LIGHT_DB_SERVER_ADDRESS) {
@@ -129,10 +135,11 @@ function launch() {
         return startLightDBInstance();
     }
 
-
+    log(`Cluster mode is ${cluster.isPrimary ? "primary" : "worker"}.`);
     if (cluster.isPrimary) {
         logger.log(`Primary process with PID ${process.pid} is running`);
 
+        log(`Starting LightDB instance...`);
         startLightDBInstance(function () {
             logger.info(`A number of ${numCPUs} workers will be forked in the following moments`);
             // Fork workers.
