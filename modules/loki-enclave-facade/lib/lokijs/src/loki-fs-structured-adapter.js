@@ -28,6 +28,7 @@
         const fs = require('fs');
         const readline = require('readline');
         const stream = require('stream');
+        const log = require("../../../utils/logger").conditionalLog
 
         /**
          * Loki structured (node) filesystem adapter class.
@@ -166,28 +167,35 @@
          * @memberof LokiFsStructuredAdapter
          */
         LokiFsStructuredAdapter.prototype.loadNextCollection = function (dbname, collectionIndex, callback) {
-            let instream = fs.createReadStream(dbname + "." + collectionIndex);
-            let outstream = new stream();
-            let rl = readline.createInterface(instream, outstream);
+            let instream = null;
+            let outstream = null;
+            let rl = null;
 
-            // console.log("We are here before: " + dbname + "." + collectionIndex);
-            // try {
-            //     let filePath = dbname + "." + collectionIndex;
+            log(console, "Loading next collection: " + dbname + "." + collectionIndex);
+
+            try {
+                let filePath = dbname + "." + collectionIndex;
                 
-            //     if(!fs.existsSync(filePath))
-            //         throw new Error("File not found");
+                if(!fs.existsSync(filePath))
+                    throw new Error("File not found");
 
-            //     instream = fs.createReadStream(dbname + "." + collectionIndex);
-            //     outstream = new stream();
-            //     rl = readline.createInterface(instream, outstream);
-            // } catch (e) {
-            //     console.log("Error opening collection file: " + dbname + "." + collectionIndex);
-            //     instream = fs.createReadStream(dbname.replace("FixedUrls.db", "FixedUrls.db-renamed") + "." + collectionIndex);
-            //     outstream = new stream();
-            //     rl = readline.createInterface(instream, outstream);
-            // }
+                instream = fs.createReadStream(dbname + "." + collectionIndex);
+                outstream = new stream();
+                rl = readline.createInterface(instream, outstream);
+            } catch (e) {
+                log(console, "Error opening collection file: " + dbname + "." + collectionIndex);
 
-            // console.log("We are here after: " + dbname + "." + collectionIndex);
+                const match = path.match(/\/([^\/]+)\/database$/);
+
+                if(match && !dbname.includes("renamed"))
+                    dbname = dbname.replace(match[1], match[1] + "-renamed");
+
+                log(console, "Seems that path is incorrect changing to : " + dbname + "." + collectionIndex);
+
+                instream = fs.createReadStream(dbname + "." + collectionIndex);
+                outstream = new stream();
+                rl = readline.createInterface(instream, outstream);
+            }
 
             let self = this,
                 obj;
