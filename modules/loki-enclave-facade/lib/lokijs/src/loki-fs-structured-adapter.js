@@ -171,21 +171,20 @@
             let outstream = null;
             let rl = null;
 
-            log(console, "Loading next collection: " + dbname + "." + collectionIndex);
+            let filePath = dbname + "." + collectionIndex;
+            log(console, "Loading next collection: " + filePath);
 
             try {
-                let filePath = dbname + "." + collectionIndex;
-                
                 if(!fs.existsSync(filePath))
                     throw new Error("File not found");
 
-                instream = fs.createReadStream(dbname + "." + collectionIndex);
+                instream = fs.createReadStream(filePath);
                 outstream = new stream();
                 rl = readline.createInterface(instream, outstream);
             } catch (e) {
                 log(console, "Error opening collection file: " + dbname + "." + collectionIndex);
 
-                const match = path.match(/\/([^\/]+)\/database$/);
+                const match = dbname.match(/\/([^\/]+)\/database$/);
 
                 if(match && !dbname.includes("renamed"))
                     dbname = dbname.replace(match[1], match[1] + "-renamed");
