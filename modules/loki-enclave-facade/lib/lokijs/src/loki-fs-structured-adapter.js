@@ -166,28 +166,28 @@
          * @memberof LokiFsStructuredAdapter
          */
         LokiFsStructuredAdapter.prototype.loadNextCollection = function (dbname, collectionIndex, callback) {
-            let instream = null;
-            let outstream = null;
-            let rl = null;
+            let instream = fs.createReadStream(dbname + "." + collectionIndex);
+            let outstream = new stream();
+            let rl = readline.createInterface(instream, outstream);
 
-            console.log("We are here before: " + dbname + "." + collectionIndex);
-            try {
-                let filePath = dbname + "." + collectionIndex;
+            // console.log("We are here before: " + dbname + "." + collectionIndex);
+            // try {
+            //     let filePath = dbname + "." + collectionIndex;
                 
-                if(!fs.existsSync(filePath))
-                    throw new Error("File not found");
+            //     if(!fs.existsSync(filePath))
+            //         throw new Error("File not found");
 
-                instream = fs.createReadStream(dbname + "." + collectionIndex);
-                outstream = new stream();
-                rl = readline.createInterface(instream, outstream);
-            } catch (e) {
-                console.log("Error opening collection file: " + dbname + "." + collectionIndex);
-                instream = fs.createReadStream(dbname.replace("FixedUrls.db", "FixedUrls.db-renamed") + "." + collectionIndex);
-                outstream = new stream();
-                rl = readline.createInterface(instream, outstream);
-            }
+            //     instream = fs.createReadStream(dbname + "." + collectionIndex);
+            //     outstream = new stream();
+            //     rl = readline.createInterface(instream, outstream);
+            // } catch (e) {
+            //     console.log("Error opening collection file: " + dbname + "." + collectionIndex);
+            //     instream = fs.createReadStream(dbname.replace("FixedUrls.db", "FixedUrls.db-renamed") + "." + collectionIndex);
+            //     outstream = new stream();
+            //     rl = readline.createInterface(instream, outstream);
+            // }
 
-            console.log("We are here after: " + dbname + "." + collectionIndex);
+            // console.log("We are here after: " + dbname + "." + collectionIndex);
 
             let self = this,
                 obj;
