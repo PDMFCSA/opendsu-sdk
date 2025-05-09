@@ -205,6 +205,7 @@ function AdminService(exposeAllApis) {
     this.checkForTemplate = function (path, callback) {
         enclave.getRecord(DID_replacement, TEMPLATES_TABLE, path, (err, template) => {
             //cleanup template obj before returning it
+            console.log("Template: ", JSON.stringify(template));
             return callback(err, template);
         });
     }
