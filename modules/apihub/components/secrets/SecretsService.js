@@ -126,9 +126,9 @@ function SecretsService(serverRootFolder) {
 
         let result;
         try {
-            result = await dbService.insertDocument(DB_NAME, secretsContainerName, encryptedSecrets);
+            result = await dbService.insertDocument(DB_NAME, secretsContainerName, {value: encryptedSecrets});
         } catch (e) {
-            result = await dbService.updateDocument(DB_NAME, secretsContainerName, encryptedSecrets)
+            result = await dbService.updateDocument(DB_NAME, secretsContainerName, {value: encryptedSecrets})
         }
         return result;
 
@@ -199,7 +199,13 @@ function SecretsService(serverRootFolder) {
         const filePath = getSecretFilePath(secretsContainerName);
         
         dbService.getDocument(DB_NAME, secretsContainerName)
-        .then(async (secrets) => {
+        .then(async (record) => {
+            const secrets = record.value;
+        
+            if (!secrets) {
+                logger.log(`No secret found for ${secretsContainerName}`);
+                return callback(createError(404, `No secret found for ${secretsContainerName}`));
+            }
             let decryptedSecrets;
             try {
                 decryptedSecrets = await decryptSecret(secretsContainerName, secrets);
