@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const config = require("../../http-wrapper/config");
+const {DBService} = require("../../../loki-enclave-facade/services/DBService");
 const {CONTAINERS} = require("./constants");
 
 
@@ -9,7 +10,8 @@ function SecretsService(serverRootFolder) {
     const DEFAULT_CONTAINER_NAME = "default";
     const API_KEY_CONTAINER_NAME = "apiKeys";
     const getStorageFolderPath = () => {
-        return path.join(serverRootFolder, config.getConfig("externalStorage"), "secrets");
+        return DB_NAME;
+        //return path.join(serverRootFolder, config.getConfig("externalStorage"), "secrets");
     }
 
     const lockPath = path.join(getStorageFolderPath(), "secret.lock");
@@ -20,6 +22,20 @@ function SecretsService(serverRootFolder) {
     const crypto = openDSU.loadAPI("crypto");
     const encryptionKeys = process.env.SSO_SECRETS_ENCRYPTION_KEY ? process.env.SSO_SECRETS_ENCRYPTION_KEY.split(",") : undefined;
     let readonlyMode;
+
+    // CouchDB integration
+    const DB_NAME= "db_secrets";
+
+    const userName = process.env.DB_USER || config.db.user;
+    const secret = process.env.DB_SECRET || config.db.secret;
+
+    const dbServiceConfig = {
+        uri: config.db.uri,
+        username: userName,
+        secret: secret,
+    }
+
+    const dbService = new DBService(dbServiceConfig);
 
     let writeEncryptionKey = encryptionKeys ? encryptionKeys[0].trim() : undefined;
     if (typeof writeEncryptionKey === "undefined") {
@@ -71,7 +87,7 @@ function SecretsService(serverRootFolder) {
 
     this.loadAsync = async () => {
         ensureFolderExists(getStorageFolderPath());
-        let secretsContainersNames = fs.readdirSync(getStorageFolderPath());
+        let secretsContainersNames = dbService.listDocuments(DB_NAME);
         if (secretsContainersNames.length) {
             secretsContainersNames = secretsContainersNames.map((containerName) => {
                 const extIndex = containerName.lastIndexOf(".");
@@ -104,7 +120,15 @@ function SecretsService(serverRootFolder) {
         let secrets = containers[secretsContainerName];
         secrets = JSON.stringify(secrets);
         const encryptedSecrets = encryptSecret(secrets);
-        fs.writeFile(getSecretFilePath(secretsContainerName), encryptedSecrets, callback);
+        try {
+            dbService.insertDocument(DB_NAME, secretsContainerName, encryptedSecrets)
+            .then((res) => callback(undefined, encryptedSecrets));
+        } catch (e) {
+            dbService.updateDocument(DB_NAME, secretsContainerName, encryptedSecrets)
+            .then((res) =>  callback(undefined, res))
+            .catch((err) => callback(e));
+        }
+        // fs.writeFile(getSecretFilePath(secretsContainerName), encryptedSecrets, callback);
     }
 
     const writeSecretsAsync = async (secretsContainerName) => {
@@ -112,16 +136,22 @@ function SecretsService(serverRootFolder) {
     }
     const ensureFolderExists = (folderPath) => {
         try {
-            fs.accessSync(folderPath);
+            let db = dbService.dbExists(folderPath)
+            if(!db)
+                throw new Error(`Database doesn't exist: ${folderPath}!`);
+            // fs.accessSync(folderPath);
         } catch (e) {
-            fs.mkdirSync(folderPath, {recursive: true});
+            logger.debug(`Creating database ${folderPath}...`);
+            dbService.createDatabase(folderPath);
+            // fs.mkdirSync(folderPath, {recursive: true});
         }
     }
 
 
     const getSecretFilePath = (secretsContainerName) => {
         const folderPath = getStorageFolderPath();
-        return path.join(folderPath, `${secretsContainerName}.secret`);
+        // return path.join(folderPath, `${secretsContainerName}.secret`);
+        return `${secretsContainerName}.secret`
     }
 
     const decryptAndParseSecrets = (secretsContainerName, encryptedSecret, encryptionKey) => {
@@ -163,12 +193,9 @@ function SecretsService(serverRootFolder) {
 
     const getDecryptedSecrets = (secretsContainerName, callback) => {
         const filePath = getSecretFilePath(secretsContainerName);
-        fs.readFile(filePath, async (err, secrets) => {
-            if (err || !secrets) {
-                logger.log(`Failed to read file ${filePath}`);
-                return callback(createError(404, `Failed to read file ${filePath}`));
-            }
-
+        
+        dbService.getDocument(DB_NAME, secretsContainerName)
+        .then(async (secrets) => {
             let decryptedSecrets;
             try {
                 decryptedSecrets = await decryptSecret(secretsContainerName, secrets);
@@ -177,7 +204,25 @@ function SecretsService(serverRootFolder) {
             }
 
             callback(undefined, decryptedSecrets);
+        }).catch((err) => {
+                logger.log(`Failed to read secret ${filePath}`);
+                return callback(createError(404, `Failed to read file ${filePath}: ${err}`));
         });
+        // fs.readFile(filePath, async (err, secrets) => {
+        //     if (err || !secrets) {
+        //         logger.log(`Failed to read file ${filePath}`);
+        //         return callback(createError(404, `Failed to read file ${filePath}`));
+        //     }
+
+        //     let decryptedSecrets;
+        //     try {
+        //         decryptedSecrets = await decryptSecret(secretsContainerName, secrets);
+        //     } catch (e) {
+        //         return callback(e);
+        //     }
+
+        //     callback(undefined, decryptedSecrets);
+        // });
     }
 
     const getDecryptedSecretsAsync = async (secretsContainerName) => {
