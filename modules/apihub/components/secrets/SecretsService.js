@@ -98,7 +98,7 @@ function SecretsService(serverRootFolder) {
             })
 
             for (let containerName of secretsContainersNames) {
-                await loadContainerAsync(containerName.pk);
+                await loadContainerAsync(containerName);
             }
         } else {
             logger.info("No secrets containers found");
