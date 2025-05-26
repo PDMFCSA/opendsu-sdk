@@ -7,6 +7,7 @@ const logger = $$.getLogger("SimpleLock", "apihub/logger");
 const STORAGE = "external-volume/locks";
 
 module.exports = function (server) {
+    const lock = new Lock();
 
     const storage = path.join(server.rootFolder, STORAGE);
     let fileStructureEnsured = false;
@@ -140,15 +141,16 @@ module.exports = function (server) {
         });
     }
 
-    server.get("/lock", (req, res) => {
+    server.get("/lock", async (req, res) => {
         let {id, secret, period} = req.query;
         if (!id || !secret || !period) {
             res.statusCode = 400;
             res.end();
             return;
         }
-
+        await lock.acquire()
         putLock(id, secret, period, (err, success) => {
+            lock.release();
             if (err) {
                 res.statusCode = 500;
                 res.end();
@@ -164,14 +166,16 @@ module.exports = function (server) {
         });
     });
 
-    server.get("/unlock", (req, res) => {
+    server.get("/unlock", async (req, res) => {
         let {id, secret} = req.query;
         if (!id || !secret) {
             res.statusCode = 400;
             res.end();
             return;
         }
+        await lock.acquire()
         removeLock(id, secret, (err, result) => {
+            lock.release();
             if (err) {
                 res.statusCode = 500;
                 res.end();
