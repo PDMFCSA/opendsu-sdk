@@ -128,6 +128,8 @@ function SecretsService(serverRootFolder) {
         try {
             result = await dbService.insertDocument(DB_NAME, secretsContainerName, {value: encryptedSecrets});
         } catch (e) {
+            if (!e.message.includes(`already exists in ${DB_NAME}`))
+                throw e
             result = await dbService.updateDocument(DB_NAME, secretsContainerName, {value: encryptedSecrets})
         }
         return result;
