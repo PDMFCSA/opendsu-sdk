@@ -25,16 +25,17 @@ function SecretsService(serverRootFolder) {
     let readonlyMode;
 
     // CouchDB integration
-  
 
-    const userName = process.env.DB_USER || config.db.user;
-    const secret = process.env.DB_SECRET || config.db.secret;
+    const dbConfig = config.getConfig("db");
+
+    const userName = process.env.DB_USER || dbConfig.user;
+    const secret = process.env.DB_SECRET || dbConfig.secret;
 
     const dbServiceConfig = {
-        uri: config.db.uri,
+        uri: dbConfig.uri,
         username: userName,
         secret: secret,
-        debug: config.db.debug || false
+        debug: dbConfig.debug || false
     }
 
     const dbService = new DBService(dbServiceConfig);
