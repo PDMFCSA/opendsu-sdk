@@ -14,8 +14,11 @@ function SecretsService(serverRootFolder) {
         return DB_NAME;
         //return path.join(serverRootFolder, config.getConfig("externalStorage"), "secrets");
     }
+    const getStorageFolderPathOld = () => {
+        return path.join(serverRootFolder, config.getConfig("externalStorage"), "secrets");
+    }
 
-    const lockPath = path.join(getStorageFolderPath(), "secret.lock");
+    const lockPath = path.join(getStorageFolderPathOld(), "secret.lock");
     const lock = require("../../http-wrapper/utils/ExpiringFileLock").getLock(lockPath, 10000);
     console.log("Secrets Service initialized");
     const logger = $$.getLogger("secrets", "apihub/secrets");
