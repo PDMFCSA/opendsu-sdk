@@ -90,7 +90,7 @@ function SecretsService(serverRootFolder) {
 
     this.loadAsync = async () => {
         await ensureFolderExists(getStorageFolderPath());
-        let secretsContainersNames = dbService.listDocuments(DB_NAME);
+        let secretsContainersNames = await dbService.listDocuments(DB_NAME);
         if (secretsContainersNames.length) {
             secretsContainersNames = secretsContainersNames.map((containerName) => {
                 const extIndex = containerName.lastIndexOf(".");
