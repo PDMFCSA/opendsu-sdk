@@ -126,11 +126,11 @@ function SecretsService(serverRootFolder) {
 
         let result;
         try {
-            result = await dbService.insertDocument(DB_NAME, secretsContainerName, {value: encryptedSecrets});
+            result = await dbService.insertDocument(DB_NAME, getSecretFilePath(secretsContainerName), {value: encryptedSecrets});
         } catch (e) {
             if (!e.message.includes(`already exists in ${DB_NAME}`))
                 throw e
-            result = await dbService.updateDocument(DB_NAME, secretsContainerName, {value: encryptedSecrets})
+            result = await dbService.updateDocument(DB_NAME, getSecretFilePath(secretsContainerName), {value: encryptedSecrets})
         }
         return result;
 
