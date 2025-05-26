@@ -133,6 +133,7 @@ function SecretsService(serverRootFolder) {
             return decryptedSecrets;
         } catch (e) {
             logger.error(`Failed to parse secrets`);
+            logger.debug(`Encrypted secrets: ${encryptedSecret}, Encryption Key: ${encryptionKey}`);
             throw createError(555, `Failed to parse secrets`);
         }
     }
@@ -154,6 +155,7 @@ function SecretsService(serverRootFolder) {
                 logger.error(`Failed to decrypt secrets`);
                 readonlyMode = true;
                 console.log("Readonly mode activated")
+                logger.debug(`Encrypted key: ${writeEncryptionKey}`);
                 throw createError(555, `Failed to decrypt secrets`);
             }
         }
