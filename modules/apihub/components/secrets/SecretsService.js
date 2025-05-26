@@ -6,6 +6,7 @@ const {CONTAINERS} = require("./constants");
 
 
 function SecretsService(serverRootFolder) {
+    const DB_NAME= "db_secrets";
     serverRootFolder = serverRootFolder || config.getConfig("storage");
     const DEFAULT_CONTAINER_NAME = "default";
     const API_KEY_CONTAINER_NAME = "apiKeys";
@@ -24,7 +25,7 @@ function SecretsService(serverRootFolder) {
     let readonlyMode;
 
     // CouchDB integration
-    const DB_NAME= "db_secrets";
+  
 
     const userName = process.env.DB_USER || config.db.user;
     const secret = process.env.DB_SECRET || config.db.secret;
