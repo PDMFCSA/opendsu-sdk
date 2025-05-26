@@ -115,26 +115,27 @@ function SecretsService(serverRootFolder) {
         return crypto.encrypt(secret, writeEncryptionKey);
     }
 
-    const writeSecrets = async (secretsContainerName, callback) => {
+    const writeSecrets = async (secretsContainerName) => {
         if (readonlyMode) {
-            return callback(createError(555, `Secrets Service is in readonly mode`));
+            throw new createError(555, `Secrets Service is in readonly mode`);
         }
         let secrets = containers[secretsContainerName];
         secrets = JSON.stringify(secrets);
         const encryptedSecrets = encryptSecret(secrets);
-   
-        await dbService.insertDocument(DB_NAME, secretsContainerName, encryptedSecrets)
-        .then((res) => callback(undefined, encryptedSecrets)).catch(async _ => {
-            await dbService.updateDocument(DB_NAME, secretsContainerName, encryptedSecrets)
-                .then((res) =>  callback(undefined, res))
-                .catch((err) => callback(e));
-        });
+
+        let result;
+        try {
+            result = await dbService.insertDocument(DB_NAME, secretsContainerName, encryptedSecrets);
+        } catch (e) {
+            result = await dbService.updateDocument(DB_NAME, secretsContainerName, encryptedSecrets)
+        }
+        return result;
 
         // fs.writeFile(getSecretFilePath(secretsContainerName), encryptedSecrets, callback);
     }
 
     const writeSecretsAsync = async (secretsContainerName) => {
-        return await writeSecrets(secretsContainerName);
+        return writeSecrets(secretsContainerName);
     }
     const ensureFolderExists = async (folderPath) => {
         try {
