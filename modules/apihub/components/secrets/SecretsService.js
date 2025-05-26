@@ -123,8 +123,8 @@ function SecretsService(serverRootFolder) {
         const encryptedSecrets = encryptSecret(secrets);
    
         await dbService.insertDocument(DB_NAME, secretsContainerName, encryptedSecrets)
-        .then((res) => callback(undefined, encryptedSecrets)).catch(_ => {
-            dbService.updateDocument(DB_NAME, secretsContainerName, encryptedSecrets)
+        .then((res) => callback(undefined, encryptedSecrets)).catch(async _ => {
+            await dbService.updateDocument(DB_NAME, secretsContainerName, encryptedSecrets)
                 .then((res) =>  callback(undefined, res))
                 .catch((err) => callback(e));
         });
