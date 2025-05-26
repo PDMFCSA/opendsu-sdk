@@ -33,6 +33,7 @@ function SecretsService(serverRootFolder) {
         uri: config.db.uri,
         username: userName,
         secret: secret,
+        debug: config.db.debug || false
     }
 
     const dbService = new DBService(dbServiceConfig);
@@ -86,7 +87,7 @@ function SecretsService(serverRootFolder) {
     }
 
     this.loadAsync = async () => {
-        ensureFolderExists(getStorageFolderPath());
+        await ensureFolderExists(getStorageFolderPath());
         let secretsContainersNames = dbService.listDocuments(DB_NAME);
         if (secretsContainersNames.length) {
             secretsContainersNames = secretsContainersNames.map((containerName) => {
@@ -134,15 +135,15 @@ function SecretsService(serverRootFolder) {
     const writeSecretsAsync = async (secretsContainerName) => {
         return await $$.promisify(writeSecrets)(secretsContainerName);
     }
-    const ensureFolderExists = (folderPath) => {
+    const ensureFolderExists = async (folderPath) => {
         try {
-            let db = dbService.dbExists(folderPath)
+            let db = await dbService.dbExists(folderPath)
             if(!db)
                 throw new Error(`Database doesn't exist: ${folderPath}!`);
             // fs.accessSync(folderPath);
         } catch (e) {
             logger.debug(`Creating database ${folderPath}...`);
-            dbService.createDatabase(folderPath);
+            await dbService.createDatabase(folderPath);
             // fs.mkdirSync(folderPath, {recursive: true});
         }
     }
