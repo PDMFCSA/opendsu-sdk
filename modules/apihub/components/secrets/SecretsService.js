@@ -93,12 +93,12 @@ function SecretsService(serverRootFolder) {
         let secretsContainersNames = await dbService.listDocuments(DB_NAME);
         if (secretsContainersNames.length) {
             secretsContainersNames = secretsContainersNames.map((containerName) => {
-                const extIndex = containerName.lastIndexOf(".");
-                return path.basename(containerName).substring(0, extIndex);
+                const extIndex = containerName.pk.lastIndexOf(".");
+                return path.basename(containerName.pk).substring(0, extIndex);
             })
 
             for (let containerName of secretsContainersNames) {
-                await loadContainerAsync(containerName);
+                await loadContainerAsync(containerName.pk);
             }
         } else {
             logger.info("No secrets containers found");
