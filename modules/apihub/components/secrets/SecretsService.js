@@ -177,7 +177,7 @@ function SecretsService(serverRootFolder) {
             bytes[i] = binaryString.charCodeAt(i); // Convert binary string to byte array
         }
         const buff = bytes.buffer; // Return as ArrayBuffer  
-        return buff
+        return Buffer.from(buff);
     }
 
 
