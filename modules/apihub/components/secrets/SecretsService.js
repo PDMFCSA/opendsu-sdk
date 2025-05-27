@@ -121,7 +121,7 @@ function SecretsService(serverRootFolder) {
 
     const writeSecrets = async (secretsContainerName) => {
         if (readonlyMode) {
-            throw new createError(555, `Secrets Service is in readonly mode`);
+            throw createError(555, `Secrets Service is in readonly mode`);
         }
         let secrets = containers[secretsContainerName];
         secrets = JSON.stringify(secrets);
