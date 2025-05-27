@@ -203,12 +203,12 @@ function SecretsService(serverRootFolder) {
     const getDecryptedSecrets = (secretsContainerName, callback) => {
         const filePath = getSecretFilePath(secretsContainerName);
         
-        dbService.readDocument(DB_NAME, secretsContainerName)
+        dbService.readDocument(DB_NAME, filePath)
         .then(async (record) => {
             const secrets = record.value;
         
             if (!secrets) {
-                logger.log(`No secret found for ${secretsContainerName}`);
+                logger.log(`No secret found for ${filePath}`);
                 return callback(createError(404, `No secret found for ${secretsContainerName}`));
             }
             let decryptedSecrets;
