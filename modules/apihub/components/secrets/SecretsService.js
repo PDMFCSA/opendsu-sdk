@@ -125,7 +125,7 @@ function SecretsService(serverRootFolder) {
         }
         let secrets = containers[secretsContainerName];
         secrets = JSON.stringify(secrets);
-        const encryptedSecrets = encryptSecret(secrets);
+        const encryptedSecrets = secrets //encryptSecret(secrets);
 
         let result;
         try {
@@ -166,7 +166,7 @@ function SecretsService(serverRootFolder) {
     const decryptAndParseSecrets = (secretsContainerName, encryptedSecret, encryptionKey) => {
         let decryptedSecrets;
         try {
-            decryptedSecrets = crypto.decrypt(encryptedSecret, encryptionKey);
+            decryptedSecrets = encryptedSecret // crypto.decrypt(encryptedSecret, encryptionKey);
             decryptedSecrets = JSON.parse(decryptedSecrets.toString());
             containers[secretsContainerName] = decryptedSecrets;
             return decryptedSecrets;
