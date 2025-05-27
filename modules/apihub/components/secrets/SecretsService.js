@@ -106,8 +106,8 @@ function SecretsService(serverRootFolder) {
         let secretsContainersNames = await this.listDBEntries();  //await dbService.listDocuments(DB_NAME);
         if (secretsContainersNames.length) {
             secretsContainersNames = secretsContainersNames.map((containerName) => {
-                const extIndex = containerName.pk.lastIndexOf(".");
-                return path.basename(containerName.pk).substring(0, extIndex);
+                const extIndex = containerName._id.lastIndexOf(".");
+                return path.basename(containerName._id).substring(0, extIndex);
             })
 
             for (let containerName of secretsContainersNames) {
