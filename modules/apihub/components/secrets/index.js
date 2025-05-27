@@ -11,6 +11,7 @@ function secrets(server) {
     let secretsService;
     setTimeout(async () => {
         secretsService = await SecretsService.getSecretsServiceInstanceAsync(server.rootFolder);
+        logEncryptionTest()
     })
 
     const containerIsWhitelisted = (containerName) => {
@@ -97,11 +98,9 @@ function secrets(server) {
         logger.info(0x500, "Writing encrypted file on disk: " + filePath);
         logger.info(0x500, "Cipher text(file contents): " + encryptedText);
 
-        require("fs").writeFile(filePath, encryptedText, (err) => {
-            if (err) {
-                logger.info(0x500, "Failed to write file: " + filePath + " Error: " + err);
-            }
-        });
+        secretsService.putSecretAsync("encryption_test", "encryption_test", {value: encryptedText})
+            .catch((e) => console.error(`Failed to store encryption test: ${e.message}`))
+
     }
 
     async function putDIDSecret(req, res) {
@@ -154,8 +153,6 @@ function secrets(server) {
 
         res.end();
     }
-
-    logEncryptionTest();
 
     const senderIsAdmin = (req) => {
         const authorizationHeader = req.headers.authorization;

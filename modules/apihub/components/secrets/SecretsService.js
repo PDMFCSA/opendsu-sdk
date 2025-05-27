@@ -167,6 +167,10 @@ function SecretsService(serverRootFolder) {
         }
     }
 
+    this.createDatabase = async (db) => {
+        return ensureFolderExists(db)
+    }
+
     function ArrayBuffertoBase64(buffer){
         let binary = '';
         const bytes = new Uint8Array(buffer);
