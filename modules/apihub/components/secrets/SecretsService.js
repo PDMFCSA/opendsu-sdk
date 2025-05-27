@@ -190,7 +190,6 @@ function SecretsService(serverRootFolder) {
     const decryptAndParseSecrets = (secretsContainerName, encryptedSecret, encryptionKey) => {
         let decryptedSecrets;
         try {
-            encryptedSecret = Base64toArrayBuffer(encryptedSecret);
             decryptedSecrets = crypto.decrypt(encryptedSecret, encryptionKey);
             decryptedSecrets = JSON.parse(decryptedSecrets.toString());
             containers[secretsContainerName] = decryptedSecrets;
@@ -233,7 +232,7 @@ function SecretsService(serverRootFolder) {
 
         try {
             let record = await dbService.readDocument(DB_NAME, filePath)
-            const secrets = record.value;
+            const secrets = Base64toArrayBuffer(record.value);
 
             if (!secrets) {
                 logger.log(`No secret found for ${filePath}`);
