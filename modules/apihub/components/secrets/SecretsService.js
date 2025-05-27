@@ -178,6 +178,9 @@ function SecretsService(serverRootFolder) {
     }
     const decryptSecret = async (secretsContainerName, encryptedSecret) => {
         let decryptedSecret;
+        if(!!encryptSecret.data)
+            encryptSecret = encryptSecret.data;
+        
         try {
             decryptedSecret = decryptAndParseSecrets(secretsContainerName, encryptedSecret, writeEncryptionKey);
             readonlyMode = false;
