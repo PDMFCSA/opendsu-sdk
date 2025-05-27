@@ -125,7 +125,8 @@ function SecretsService(serverRootFolder) {
         }
         let secrets = containers[secretsContainerName];
         secrets = JSON.stringify(secrets);
-        const encryptedSecrets = secrets //encryptSecret(secrets);
+        let encryptedSecrets = encryptSecret(secrets);
+        encryptedSecrets = ArrayBuffertoBase64(encryptedSecrets)
 
         let result;
         try {
@@ -156,6 +157,29 @@ function SecretsService(serverRootFolder) {
         }
     }
 
+    function ArrayBuffertoBase64(buffer){
+        let binary = '';
+        const bytes = new Uint8Array(buffer);
+        const len = bytes.byteLength;
+        for (let i = 0; i < len; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+
+        const value = btoa(binary);   
+        return value
+    }
+
+    function Base64toArrayBuffer(str){
+        const binaryString = atob(str); // Decode Base64 to binary string
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len); // Create a Uint8Array
+        for (let i = 0; i < len; i++) {
+            bytes[i] = binaryString.charCodeAt(i); // Convert binary string to byte array
+        }
+        const buff = bytes.buffer; // Return as ArrayBuffer  
+        return buff
+    }
+
 
     const getSecretFilePath = (secretsContainerName) => {
         const folderPath = getStorageFolderPath();
@@ -166,7 +190,8 @@ function SecretsService(serverRootFolder) {
     const decryptAndParseSecrets = (secretsContainerName, encryptedSecret, encryptionKey) => {
         let decryptedSecrets;
         try {
-            decryptedSecrets = encryptedSecret // crypto.decrypt(encryptedSecret, encryptionKey);
+            encryptedSecret = Base64toArrayBuffer(encryptedSecret);
+            decryptedSecrets = crypto.decrypt(encryptedSecret, encryptionKey);
             decryptedSecrets = JSON.parse(decryptedSecrets.toString());
             containers[secretsContainerName] = decryptedSecrets;
             return decryptedSecrets;
