@@ -91,9 +91,19 @@ function SecretsService(serverRootFolder) {
         }
     }
 
+    this.listDBEntries = async () => {
+        let db = dbService.client.use(DB_NAME);
+        const result = await db.find({
+            selector: {},
+            limit: 100,
+            skip: 0
+        });
+        return result.docs;
+    }
+
     this.loadAsync = async () => {
         await ensureFolderExists(getStorageFolderPath());
-        let secretsContainersNames = await dbService.listDocuments(DB_NAME);
+        let secretsContainersNames = await this.listDBEntries();  //await dbService.listDocuments(DB_NAME);
         if (secretsContainersNames.length) {
             secretsContainersNames = secretsContainersNames.map((containerName) => {
                 const extIndex = containerName.pk.lastIndexOf(".");
