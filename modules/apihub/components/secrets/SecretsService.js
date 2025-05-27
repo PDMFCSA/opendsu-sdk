@@ -249,7 +249,7 @@ function SecretsService(serverRootFolder) {
             return decryptedSecrets;
         } catch (e) {
                 logger.log(`Failed to read secret ${filePath}`);
-                throw createError(404, `Failed to read file ${filePath}: ${err}`);
+                throw createError(404, `Failed to read file ${filePath}: ${e}`);
         }
         
 
