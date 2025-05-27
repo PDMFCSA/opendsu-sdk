@@ -200,29 +200,32 @@ function SecretsService(serverRootFolder) {
         }
     };
 
-    const getDecryptedSecrets = (secretsContainerName, callback) => {
+    const getDecryptedSecrets = async (secretsContainerName, callback) => {
         const filePath = getSecretFilePath(secretsContainerName);
-        
-        dbService.readDocument(DB_NAME, filePath)
-        .then(async (record) => {
+
+        try {
+            let record = await dbService.readDocument(DB_NAME, filePath)
             const secrets = record.value;
-        
+
             if (!secrets) {
                 logger.log(`No secret found for ${filePath}`);
-                return callback(createError(404, `No secret found for ${secretsContainerName}`));
+                throw createError(404, `No secret found for ${secretsContainerName}`);
             }
+
             let decryptedSecrets;
             try {
                 decryptedSecrets = await decryptSecret(secretsContainerName, secrets);
             } catch (e) {
-                return callback(e);
+                throw e;
             }
 
-            callback(undefined, decryptedSecrets);
-        }).catch((err) => {
+            return decryptedSecrets;
+        } catch (e) {
                 logger.log(`Failed to read secret ${filePath}`);
-                return callback(createError(404, `Failed to read file ${filePath}: ${err}`));
-        });
+                throw createError(404, `Failed to read file ${filePath}: ${err}`);
+        }
+        
+
         // fs.readFile(filePath, async (err, secrets) => {
         //     if (err || !secrets) {
         //         logger.log(`Failed to read file ${filePath}`);
@@ -241,7 +244,7 @@ function SecretsService(serverRootFolder) {
     }
 
     const getDecryptedSecretsAsync = async (secretsContainerName) => {
-        return await $$.promisify(getDecryptedSecrets, this)(secretsContainerName);
+        return await getDecryptedSecrets(secretsContainerName);
     }
 
     this.putSecretAsync = async (secretsContainerName, secretName, secret, isAdmin) => {
