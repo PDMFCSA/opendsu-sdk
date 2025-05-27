@@ -38,7 +38,8 @@ function SecretsService(serverRootFolder) {
         uri: dbConfig.uri,
         username: userName,
         secret: secret,
-        debug: dbConfig.debug || false
+        debug: dbConfig.debug || false,
+        readonlyMode: process.env.READ_ONLY_MODE || false
     }
 
     const dbService = new DBService(dbServiceConfig);
