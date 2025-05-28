@@ -3,23 +3,18 @@ const path = require("path");
 const config = require("../../http-wrapper/config");
 const {DBService} = require("../../../loki-enclave-facade/services/DBService");
 const {CONTAINERS} = require("./constants");
-
+const {Lock} = require("../../middlewares/SimpleLock/Lock")
 
 function SecretsService(serverRootFolder) {
+    const lock = new Lock()
     const DB_NAME= "db_secrets";
-    serverRootFolder = serverRootFolder || config.getConfig("storage");
     const DEFAULT_CONTAINER_NAME = "default";
     const API_KEY_CONTAINER_NAME = "apiKeys";
     const getStorageFolderPath = () => {
         return DB_NAME;
         //return path.join(serverRootFolder, config.getConfig("externalStorage"), "secrets");
     }
-    const getStorageFolderPathOld = () => {
-        return path.join(serverRootFolder, config.getConfig("externalStorage"), "secrets");
-    }
 
-    const lockPath = path.join(getStorageFolderPathOld(), "secret.lock");
-    const lock = require("../../http-wrapper/utils/ExpiringFileLock").getLock(lockPath, 10000);
     console.log("Secrets Service initialized");
     const logger = $$.getLogger("secrets", "apihub/secrets");
     const openDSU = require("opendsu");
@@ -41,6 +36,8 @@ function SecretsService(serverRootFolder) {
         debug: dbConfig.debug || false,
         readonlyMode: process.env.READ_ONLY_MODE || false
     }
+
+    logger.info(`Secrets Service connecting to DB in ${dbServiceConfig.readonlyMode ? "readonly mode" : ""}${dbServiceConfig.debug ? " and debug" : ""}`);
 
     const dbService = new DBService(dbServiceConfig);
 
@@ -290,7 +287,7 @@ function SecretsService(serverRootFolder) {
     }
 
     this.putSecretAsync = async (secretsContainerName, secretName, secret, isAdmin) => {
-        await lock.lock();
+        await lock.acquire();
         let res;
         try {
             await loadContainerAsync(secretsContainerName);
@@ -307,10 +304,10 @@ function SecretsService(serverRootFolder) {
             }
             res = await writeSecretsAsync(secretsContainerName);
         } catch (e) {
-            await lock.unlock();
+            lock.release();
             throw e;
         }
-        await lock.unlock();
+        lock.release();
         return res;
     }
 
@@ -390,7 +387,7 @@ function SecretsService(serverRootFolder) {
     }
 
     this.deleteSecretAsync = async (secretsContainerName, secretName) => {
-        await lock.lock();
+        await lock.acquire();
         try {
             await loadContainerAsync(secretsContainerName);
             if (!containers[secretsContainerName]) {
@@ -403,10 +400,10 @@ function SecretsService(serverRootFolder) {
             delete containers[secretsContainerName][secretName];
             await writeSecretsAsync(secretsContainerName);
         } catch (e) {
-            await lock.unlock();
+            lock.release();
             throw e;
         }
-        await lock.unlock();
+        lock.release();
     }
 }
 
