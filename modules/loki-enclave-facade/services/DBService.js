@@ -17,6 +17,10 @@ class DBService {
      * @param {{uri: string, username?: string, secret?: string, readOnlyMode: boolean, debug: boolean}} config - Configuration object containing database connection details.
      */
     constructor(config) {
+
+        config.readOnlyMode = !!config.readOnlyMode || process.env.READ_ONLY_MODE === "true" || false;
+        if (config.readOnlyMode)
+            logger.info("DB service booted in Readonly mode")
         if (dbService)
             return dbService;
 
