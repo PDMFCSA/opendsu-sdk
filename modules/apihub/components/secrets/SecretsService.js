@@ -3,7 +3,7 @@ const path = require("path");
 const config = require("../../http-wrapper/config");
 const {DBService} = require("../../../loki-enclave-facade/services/DBService");
 const {CONTAINERS} = require("./constants");
-const {Lock} = require("../../middlewares/SimpleLock/Lock")
+const Lock = require("../../middlewares/SimpleLock/Lock")
 
 function SecretsService(serverRootFolder) {
     const lock = new Lock()
